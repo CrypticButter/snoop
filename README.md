@@ -64,14 +64,14 @@ There are multiple ways of specifying your schema(s).
 
 ### More convenient notations that work when using `>defn`:
 ```clojure
+;; Require `=>` solely to prevent unresolved symbol linting errors
 (require '[crypticbutter.snoop :refer [>defn =>]])
 
-(def Add (rand-nth
-            [[:cat int? int?] int?]
-            [int? int? => int?]]
-
 (>defn add [x y]
-  Add  
+  ;; Either:
+  [[:cat int? int?] int?]
+  ;; Or:
+  [int? int? => int?]
   ...)
 ```
 The second schema above uses a similar notation to [ghostwheel](https://github.com/gnl/ghostwheel). The `=>` can be substituted with `:=>`, `'=>` or `:ret`
@@ -128,3 +128,5 @@ At runtime, you are able to modify the `crypticbutter.snoop.config/*config` atom
 - [ ] In `>defn`, combine schemas for each arity into a single schema and call `m/=>` at runtime to register a schema passed via the pre-post map or body.
 - [ ] Provide facilities to allow valiation to be done in a different thread in CLJS.
 - [ ] Option for asynchronous checking in Clojure JVM
+
+I will probably only work on new features as I need them. Please report any issues to run into whilst using this library.
