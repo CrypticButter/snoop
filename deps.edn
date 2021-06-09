@@ -1,0 +1,9 @@
+{:paths ["src"]
+
+ :deps {net.cgrand/macrovich {:mvn/version "0.2.1"}
+        com.taoensso/encore  {:mvn/version "3.19.0"}
+        metosin/malli        {:mvn/version "0.5.1"}}
+
+ :aliases {:test {:extra-paths ["test"]
+                  :extra-deps {lambdaisland/kaocha          {:mvn/version "1.0.861"}
+                               com.lambdaisland/kaocha-cljs {:mvn/version "1.0.93"}}}}}
