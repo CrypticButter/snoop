@@ -1,0 +1,2 @@
+{:lint-as {crypticbutter.snoop/>defn  clojure.core/defn
+           crypticbutter.snoop/>defn- clojure.core/defn-}}

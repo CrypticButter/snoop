@@ -1,0 +1,12 @@
+= Developing Snoop
+
+The `:dev` alias may be useful, and `:snoop` enables instrumentation features via the JVM option.
+
+Example for `.dir-locals.el` when using CIDER:
+
+[source,elisp]
+----
+((clojure-mode . ((cider-clojure-cli-aliases . "snoop:test:dev"))))
+----
+
+After making changes, ensure the link:./testing.adoc[tests pass].

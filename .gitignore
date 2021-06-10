@@ -1,5 +1,8 @@
+.DS_Store
+
 pom.xml
 pom.xml.asc
+settings.xml
 *.jar
 *.class
 /lib/
@@ -12,5 +15,14 @@ pom.xml.asc
 .lein-failures
 .nrepl-port
 .cpcache/
-.DS_Store
+
+node_modules/*
+yarn.lock
+yarn-error.log
+.shadow-cljs/*
+.cljs_node_repl/*
+
+.dir-locals.el
+.projectile
+.clj-kondo/.cache/*
 .lsp/sqlite.db

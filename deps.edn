@@ -2,8 +2,24 @@
 
  :deps {net.cgrand/macrovich {:mvn/version "0.2.1"}
         com.taoensso/encore  {:mvn/version "3.19.0"}
-        metosin/malli        {:mvn/version "0.5.1"}}
+        metosin/malli        {:git/url "https://github.com/metosin/malli.git"
+                              :sha "69e756185feb04fd4f7d6908162fcda17dd2cba8"}}
 
- :aliases {:test {:extra-paths ["test"]
-                  :extra-deps {lambdaisland/kaocha          {:mvn/version "1.0.861"}
-                               com.lambdaisland/kaocha-cljs {:mvn/version "1.0.93"}}}}}
+ :aliases {:test {:extra-paths ["test"]}
+           :test-runner {:extra-paths ["test"]
+                         :extra-deps {lambdaisland/kaocha          {:mvn/version "1.0.861"}
+                                      lambdaisland/kaocha-cljs2 {:mvn/version "0.0.35"
+                                                                 :exclusions [lambdaisland/glogi]}
+                                      ;; you get errors when using glogi versions earlier than 1.0.100
+                                      lambdaisland/glogi {:mvn/version "1.0.106"}
+                                      thheller/shadow-cljs {:mvn/version "2.14.4"}}}
+
+           :snoop {:jvm-opts ["-Dsnoop.enabled"]}
+
+           :dev {:extra-deps {thheller/shadow-cljs {:mvn/version "2.14.4"}}}
+
+           :jar {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
+                                               :sha "511c32d4238afb860ad0b16c4827322d80c7d615"}}
+                 :main-opts ["-m" "mach.pack.alpha.skinny"
+                             "--no-libs"
+                             "--project-path" "snoop.jar"]}}}

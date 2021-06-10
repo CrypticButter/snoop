@@ -1,0 +1,5 @@
+= Testing
+
+- If testing ClojureScript, install and run link:https://github.com/lambdaisland/funnel[Funnel].
+- Run `make test` or `./bin/kaocha` (see the link:https://cljdoc.org/d/lambdaisland/kaocha/1.0.732/doc/4-running-kaocha-cli[Kaocha docs])
+  - or individual tests: `./bin/kaocha unit-clj`; `./bin/kaocha unit-cljs`

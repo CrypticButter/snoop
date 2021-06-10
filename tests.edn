@@ -1,0 +1,10 @@
+#kaocha/v1
+ {:plugins [:hooks]
+  :tests [{:id   :unit-clj
+           :type :kaocha.type/clojure.test}
+          {:id :unit-cljs
+           :type :kaocha.type/cljs2
+           :shadow/build-id     :test-runner
+           :browse-url          "http://localhost:1818"
+           ;; See https://cljdoc.org/d/lambdaisland/kaocha/1.0.861/doc/10-hooks
+           :kaocha.hooks/pre-load-test [test-runner.hooks/compile-and-launch]}]}
