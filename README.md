@@ -28,10 +28,12 @@ Thus, I took the approach of using a `>defn` macro, which has the following bene
 * Easy to quickly disable instrumentation on individual functions
 * No special linter required (can be linted as `defn`)
 
+![example snoop](https://user-images.githubusercontent.com/41270840/121600548-88637500-ca3c-11eb-918c-7464a6db0887.png)
+
 ## Installation
 
 deps.edn:
-```
+```clojure
 {com.crypticbutter/snoop {:git/url "https://github.com/crypticbutter/snoop.git"
                           :sha "..."}}
 ```
@@ -131,7 +133,7 @@ Schemas are optional. `>defn` works fine without the schema (acts as a regular
 
 ## Configuration
 
-There are two main global configurations:
+There are two main global configurations and they can be overrided for individual functions:
 
 ### Runtime config
 
@@ -157,8 +159,31 @@ You can also modify the config used by the macros. This can be done in `snoop.ed
 or via the CLJS compiler options (see [Installation](#Installation)).
 
 | Key | Default | Description
+| --- | --- | ---
 | :enabled? | `true` (only if config provided) | Whether to augment the function body with instrumentation features. This is the master switch, and should not be true in a production build.
 | :defn-sym | `'clojure.core/defn` | The symbol to use for `defn`. This allows you to combine `defn` wrappers as long as their structures are compatible with the core `defn` macro (you can forward data via metadata or prepost maps).
+
+### Per-function config
+
+You can provide config overrides as metadata (including via an `attr-map`).
+
+`::snoop/macro-config` gets merged on top of the compile-time config.
+
+`::snoop/config-atom` will be used within the function instead of `snoop/*config`
+
+```clojure
+(require '[crypticbutter.snoop :as snoop :refer [>defn]])
+
+(def special-config (atom {:malli-opts {...} :on-instrument-fail ...}))
+
+(>defn fun-function
+  {::snoop/macro-config {:enabled? true
+                         :defn-sym 'some.magic/>defn}
+   ::snoop/config-atom special-config}
+  []
+  ['=> string?]
+  "🍉")
+```
 
 ## Improvements to be made
 
