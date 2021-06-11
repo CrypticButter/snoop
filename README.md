@@ -3,6 +3,9 @@
      align="right"
      src="https://user-images.githubusercontent.com/41270840/121264336-e5c9bb80-c8ae-11eb-8466-427b0636b3d0.png">
 
+
+[![Clojars Project](https://img.shields.io/clojars/v/com.crypticbutter/snoop.svg)](https://clojars.org/com.crypticbutter/snoop)
+
 Function instrumention for Clojure(Script) using [malli](https://github.com/metosin/malli/)
 schemas and a custom defn wrapper.
 
@@ -32,10 +35,12 @@ Thus, I took the approach of using a `>defn` macro, which has the following bene
 
 ## Installation
 
+[![Clojars Project](https://img.shields.io/clojars/v/com.crypticbutter/snoop.svg)](https://clojars.org/com.crypticbutter/snoop)
+
 deps.edn:
+
 ```clojure
-com.crypticbutter/snoop {:git/url "https://github.com/crypticbutter/snoop.git"
-                         :sha "..."}
+com.crypticbutter/snoop {:mvn/version "21-162-alpha2"}
 metosin/malli {:git/url "https://github.com/metosin/malli.git"
                :sha "69e756185feb04fd4f7d6908162fcda17dd2cba8"}
 ```
