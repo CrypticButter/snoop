@@ -36,9 +36,9 @@ deps.edn:
 ```clojure
 com.crypticbutter/snoop {:git/url "https://github.com/crypticbutter/snoop.git"
                          :sha "..."}
-metosin/malli           {:git/url "https://github.com/metosin/malli.git"
-                         :sha "69e756185feb04fd4f7d6908162fcda17dd2cba8"}
-``**
+metosin/malli {:git/url "https://github.com/metosin/malli.git"
+               :sha "69e756185feb04fd4f7d6908162fcda17dd2cba8"}
+```
 
 **Note:** The latest release of malli as of writing is `0.5.1`. You will probably be
 fine with this version but I've found there can be some problems in certain
