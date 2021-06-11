@@ -59,6 +59,8 @@ in deps.edn
 Snoop is disabled by default and will throw an exception if enabled in a CLJS
 production build.
 
+If there are any problems installing & using, please let me know.
+
 ## Using the `>defn` macro
 
 | **Prerequisite:** | [understand malli's function schemas](https://github.com/metosin/malli#function-schemas)
