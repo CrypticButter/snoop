@@ -1,6 +1,5 @@
 .DS_Store
 
-pom.xml
 pom.xml.asc
 settings.xml
 *.jar
@@ -17,7 +16,6 @@ settings.xml
 .cpcache/
 
 node_modules/*
-yarn.lock
 yarn-error.log
 .shadow-cljs/*
 .cljs_node_repl/*

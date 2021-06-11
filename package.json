@@ -8,5 +8,5 @@
         "stacktrace-js": "^2.0.2",
         "stack-trace": "0.0.10",
         "ws": "7.3.1"
-    },
+    }
 }
