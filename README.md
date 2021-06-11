@@ -130,7 +130,7 @@ top-level macro.
     {:=> [:=> [:cat int? int?] int?]}
     ...)
   ([x y & zs]
-    {:=> [:=> [:cat int? int? [:* int?]] int?]}
+    [[:cat int? int? [:* int?]] int?]
     ...))
 ```
 
