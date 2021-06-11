@@ -1,9 +1,8 @@
 jar:
-	clojure -M:jar
+	clojure -M:skinnyjar
 
-deploy: jar
+pom:
 	clojure -Spom
-	mvn deploy:deploy-file -Dfile=snoop.jar -DrepositoryId=clojars -Durl=https://clojars.org/repo -DpomFile=pom.xml
 
 test:
 	./bin/kaocha
