@@ -24,5 +24,6 @@ yarn-error.log
 
 .dir-locals.el
 .projectile
+.#*
 .clj-kondo/.cache/*
 .lsp/sqlite.db

@@ -60,7 +60,7 @@
    cfg/*config)
 
  (defn get-snoop-config [fn-var]
-   @(or (-> fn-var meta ::config-atom)
+   @(or (-> fn-var #?(:cljs deref) meta ::config-atom)
         cfg/*config)))
 
 (usetime
@@ -147,8 +147,6 @@
                                      validation-ctx# {:fn-sym    '~(symbol (str *ns*) (str fn-name))
                                                       :fn-params '~params
                                                       :config ~cfg-sym}]
-                                 (prn (m/function-schemas))
-                                 (prn ['~(current-ns) '~fn-name :schema])
                                  (when input-schema#
                                    (validate :input input-schema# ~args validation-ctx#))
                                  (let [~params     ~args
@@ -161,12 +159,36 @@
             (assoc-in [:arities arity] {:input given-input-schema :output given-output-schema}))
           (update :raw-parts conj (list params-vec prepost-map modified-body))))))
 
+(deftime
+  (defn- eval-macro-config [macro-config]
+    (when (some nil? (map resolve ['def 'assoc 'merge]))
+      (refer-clojure))
+    (enc/catching (eval macro-config)
+                  e
+                  (do (println "ERROR EXPANDING >defn: failed to eval the provided ::snoop/macro-config at compile-time."
+                               "\nMake sure:"
+                               "\n• You have not passed any locals."
+                               "\n• All symbols have been bound at compile-time (eg with 'def')"
+                               "\n"
+                               "\nYou provided:")
+                      (prn macro-config)
+                      (println "\nSurfacing error below:\n")
+                      (throw e)))))
+
+#?(:cljs
+   (defn meta-fn
+     [f m]
+     (let [new-f (goog/bind f #js{})]
+       (goog/mixin new-f f)
+       (specify! new-f IMeta (-meta [_] m))
+       new-f)))
+
 (def -defn-option-keys #{::config-atom ::macro-config})
 
 (deftime
   (defn >defn*
     "Generates the output code for `>defn` from the declaration in `args`."
-    [fn-name args]
+    [&env fn-name args]
     (let [{:keys  [docstring]
            [arity-type
             code] :code
@@ -174,21 +196,22 @@
           input-attr-map        (merge (:attr-map parse-result) (:attr-map code))
           opts                  (select-keys (merge input-attr-map (meta fn-name))
                                              -defn-option-keys)
-          attr-map              (enc/remove-keys -defn-option-keys input-attr-map)
           parsed-arities        (into []
                                       (map (fn [a]
                                              (assoc a :arity (arity-of-params (:params a)))))
                                       (case arity-type
                                         :single-arity (vector code)
                                         :multi-arity  (:defs code)))
-          max-fixed-arity (->> parsed-arities
-                               (map :arity)
-                               (filter int?)
-                               (apply max 0))
+          max-fixed-arity       (->> parsed-arities
+                                     (map :arity)
+                                     (filter int?)
+                                     (apply max 0))
           {:keys [enabled?]
            :as   macro-cfg}     (merge (cfg/get-compiletime-config)
-                                       (::macro-config opts))
+                                       (eval-macro-config (::macro-config opts)))
           sym-for-defn          (:defn-sym macro-cfg)
+          attr-map              (cond->> input-attr-map (not enabled?)
+                                         (enc/remove-keys -defn-option-keys))
           {:keys [raw-parts]}   (reduce (fn [acc {:keys [params prepost-map body]
                                                   :as   parsed-part}]
                                           (if enabled?
@@ -201,11 +224,15 @@
                                         parsed-arities)
           args-for-defn         (into (enc/conj-some [] docstring attr-map)
                                       raw-parts)]
-      (apply list sym-for-defn
-             (if enabled?
-               (vary-meta fn-name assoc ::instrumented? true)
-               (vary-meta fn-name #(enc/remove-keys -defn-option-keys %)))
-             args-for-defn))))
+      (apply list
+             `do
+             (apply list sym-for-defn
+                    (if enabled?
+                      (vary-meta fn-name assoc ::instrumented? true)
+                      (vary-meta fn-name #(enc/remove-keys -defn-option-keys %)))
+                    args-for-defn)
+             (when (and (:ns &env)  enabled?)
+               [`(set! ~fn-name (meta-fn ~fn-name (enc/assoc-some {} ::config-atom ~(::config-atom opts))))])))))
 
 (deftime
   (defmacro >defn
@@ -222,13 +249,13 @@
   "
     {:style/indent :defn}
     [sym & decls]
-    (>defn* sym decls))
+    (>defn* &env sym decls))
 
   (defmacro >defn-
     "Same as `>defn` but creates a privately scoped var."
     {:style/indent :defn}
     [sym & decls]
-    (>defn* (vary-meta sym assoc :private true) decls)))
+    (>defn* &env (vary-meta sym assoc :private true) decls)))
 
 (comment
   (defmacro xsonboy {:style/indent :defn}
@@ -301,14 +328,22 @@
 
   (xf 4)
 
-  (>defn add [x y]
-    [int? int? => int?]
-    8)
-
   (add 4 "🍉")
 
   (-> (get-in (m/function-schemas) [(symbol (str *ns*)) 'xf :schema])
       m/form)
+
+
+  (>defn custom-atom
+    {::config-atom (atom (merge @*config
+                                      {:outstrument? false}))}
+    []
+    [=> int?]
+    "melon")
+  (custom-atom)
+
+  ;; (def lim ^:dynamic )
+  '(assoc {} 8 8)
 
 ;;
   )

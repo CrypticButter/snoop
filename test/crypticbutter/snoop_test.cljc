@@ -92,7 +92,7 @@
     (is (true? (throws? malli-sch 5 "y"))))
 
   (testing "multi-arity and variable-arity"
-    (>defn _varargs [& _])
+    (is (ifn? (>defn _varargs [& _])))
     (>defn multi-arity
       ([]
        [=> int?]
@@ -116,7 +116,11 @@
       5)
     (is (= 5 (d-m)))
     (>defn d-a1
-      {::snoop/macro-config {:enabled? false}}
+      {::snoop/macro-config
+       ;; Putting def here as it ensures the var is bound in both the cljs and clj
+       ;; unit tests, apparently.
+       (do (def macro-config-with-disable {:enabled? false})
+           (assoc macro-config-with-disable 4 20))}
       []
       [int? => :nil]
       5)
@@ -130,4 +134,91 @@
     (is (= 5 (d-a2)))
     (is (true? (empty? (select-keys (into {} (map meta)
                                           [(var d-m) (var d-a1) (var d-a2)])
-                                    snoop/-defn-option-keys))))))
+                                    snoop/-defn-option-keys)))))
+
+  (testing "custom runtime atom passes through"
+    (>defn passthrough
+      {::snoop/config-atom (atom (merge @snoop/*config
+                                        {:melons true}))}
+      []
+      [=> string?]
+      "melon")
+    (is (true? (contains? (some-> (var passthrough) #?(:cljs deref)
+                                  meta ::snoop/config-atom deref)
+                          :melons))))
+
+  (testing "override runtime atom"
+    ;; important to keep around whitelisting settings
+    (>defn custom-atom
+      {::snoop/config-atom (atom (merge @snoop/*config
+                                        {:outstrument? false}))}
+      []
+      [=> int?]
+      "melon")
+    (is (false? (throws? custom-atom)))
+    (>defn custom-atom-out
+      {::snoop/config-atom (atom (merge @snoop/*config
+                                        {:outstrument? true}))}
+      []
+      [=> int?]
+      "melon")
+    (is (true? (throws? custom-atom-out)))))
+
+(comment
+  (-> (meta (var custom-atom))
+      ::snoop/config-atom
+      type)
+
+  (custom-atom)
+
+  (macroexpand-1 '(crypticbutter.snoop/>defn custom-atom
+                    {::snoop/config-atom (atom (merge @snoop/*config
+                                                      {:outstrument? false}))}
+                    []
+                    [=> int?]
+                    "melon"))
+
+  @(atom (merge @snoop/*config
+                {:outstrument? false}))
+
+  (snoop/get-snoop-config (var custom-atom))
+
+  (defn x {:a (inc 0)} [])
+  (defn ^{:a (inc 0)} x [])
+  (meta (var x))
+
+  (def foo :foo-val)
+  (def xs {:a 8} [])
+  (meta xs)
+  (alter-meta! xs assoc 8 8)
+
+  (set! ^:butter x (vary-meta x (fn [y] {:some 8})))
+
+  (meta x)
+
+  (>defn passthrough
+    {::snoop/config-atom (atom (merge @snoop/*config
+                                      {:melons true}))}
+    []
+    [=> string?]
+    "melon")
+
+  (some-> (var passthrough) #?(:cljs deref) meta ::snoop/config-atom deref)
+
+  (macroexpand-1
+   (crypticbutter.snoop/>defn f [_ _]
+     []))
+  (meta f)
+
+  (f 8 8)
+
+
+
+  (defn x {:a (inc 0)} [])
+
+  (def xp nil)
+  (set! xp (meta-fn x {:a 8}))
+
+  (meta xp)
+;;
+  )

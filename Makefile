@@ -8,4 +8,7 @@ deploy: jar
 test:
 	./bin/kaocha
 
+chui:
+	shadow-cljs -A:lib/cider-nrepl watch test-runner
+
 .PHONY: test

@@ -1,10 +1,11 @@
-{:deps {:aliases [:dev :test]}
+{:deps {:aliases [:dev :test :test-runner]}
 
  :builds
  {:test-runner {:target    :browser-test
                 :runner-ns kaocha.cljs2.shadow-runner
                 :test-dir  "target/kaocha-test"
                 :ns-regexp ".*-test$"
+                :dev {:compiler-options {:external-config {:crypticbutter.snoop {}}}}
                 :devtools {:http-port 1818
                            :http-root "target/kaocha-test"
                            :preloads [lambdaisland.chui.remote]}}}}

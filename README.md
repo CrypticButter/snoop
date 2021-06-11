@@ -167,19 +167,25 @@ or via the CLJS compiler options (see [Installation](#Installation)).
 
 You can provide config overrides as metadata (including via an `attr-map`).
 
-`::snoop/macro-config` gets merged on top of the compile-time config.
+- `::snoop/macro-config` gets merged on top of the compile-time config. Whatever you
+provide here, it must be possible to `eval` it as compile-time (so all the appropriate
+vars must be bound and you cannot pass in locals).
 
-`::snoop/config-atom` will be used within the function instead of `snoop/*config`
+- `::snoop/config-atom` will be used within the function instead of `snoop/*config`. In
+ClojureScript, this will be attached to the metadata of the function object because
+[var metadata does not get evaluated](https://clojurescript.org/about/differences#_special_forms).
 
 ```clojure
 (require '[crypticbutter.snoop :as snoop :refer [>defn]])
 
-(def special-config (atom {:malli-opts {...} :on-instrument-fail ...}))
+(def special-compiletime-config {:enabled? true
+                                 :defn-sym 'some.magic/>defn})
+
+(def special-runtime-config (atom {:malli-opts {...} :on-instrument-fail ...}))
 
 (>defn fun-function
-  {::snoop/macro-config {:enabled? true
-                         :defn-sym 'some.magic/>defn}
-   ::snoop/config-atom special-config}
+  {::snoop/macro-config special-compiletime-config
+   ::snoop/config-atom special-runtime-config}
   []
   ['=> string?]
   "🍉")
