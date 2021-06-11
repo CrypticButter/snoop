@@ -1,0 +1,18 @@
+{:tasks {:requires ([babashka.fs :as fs])
+
+         chui (shell "./node_modules/.bin/shadow-cljs -A:lib/cider-nrepl watch test-runner")
+
+         test (shell "./bin/kaocha")
+
+         -jar-location "target/build/snoop.jar"
+
+         pom (clojure "-Spom")
+
+         jar {:depends [-jar-location]
+              :task (clojure "-M:skinnyjar" -jar-location)}
+
+         deploy {:depends [-jar-location]
+                 :task (clojure "-M:project/clojars" -jar-location)}
+
+         ;;
+         }}
