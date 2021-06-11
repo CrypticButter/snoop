@@ -25,20 +25,20 @@
    (let [boundary-name (case boundary
                          :input "Instrument"
                          :output "Outstrument")
-         print-msg #?(:clj println :cljs js/console.error)]
-     (print-msg (str boundary-name " error for:")
-                (:name data))
+         print-msg #?(:clj println :cljs js/console.error)
+         data-str #?(:clj pr-str :cljs identity)]
+     (print-msg (str boundary-name " error for:") (:name data))
      (enc/catching (let [hm (me/humanize explainer-error)]
                      (case boundary
                        :input (let [idx (-> hm count dec)]
                                 (print-msg "For param:" (nth (:params data) idx)
-                                           "\nGot:" (get-in explainer-error [:value idx])
-                                           "\nError:" (nth hm idx)))
-                       :output (print-msg "Got:" (:value explainer-error)
-                                          "\nError:" hm)))
+                                           "\nGot:" (data-str (get-in explainer-error [:value idx]))
+                                           "\nError:" (data-str (nth hm idx))))
+                       :output (print-msg "Got:" (data-str (:value explainer-error))
+                                          "\nError:" (data-str hm))))
                    _ (print-msg "Humanize failed"
-                                "\nGot:" (:value explainer-error)
-                                "\nErrors:" (:errors explainer-error)))
+                                "\nGot:" (data-str (:value explainer-error))
+                                "\nErrors:" (data-str (:errors explainer-error))))
      (throw (ex-info (str boundary-name " failed. See message printed above.") data)))))
 
 (usetime
