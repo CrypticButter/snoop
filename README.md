@@ -214,3 +214,6 @@ at runtime to register a schema passed via the prepost map or body.
 
 I will probably only work on new features as I need them. That said, please report any
 issues you run into whilst using this library.
+
+![Butter me up](https://user-images.githubusercontent.com/41270840/121725121-bf8b6200-cae0-11eb-8d25-4fd0807f4b8e.png)
+
