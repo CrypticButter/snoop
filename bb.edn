@@ -9,10 +9,10 @@
          pom (clojure "-Spom")
 
          jar {:depends [-jar-location]
-              :task (clojure "-M:skinnyjar" -jar-location)}
+              :task    (clojure "-M:skinnyjar" -jar-location)}
 
          deploy {:depends [-jar-location]
-                 :task (clojure "-M:project/clojars" -jar-location)}
+                 :task    (clojure "-M:project/clojars" -jar-location)}
 
          ;;
          }}

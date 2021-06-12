@@ -4,6 +4,7 @@
             [net.cgrand.macrovich :as macrovich :refer [deftime usetime]]))
   (:require
    #?@(:clj [[net.cgrand.macrovich :as macrovich :refer [deftime usetime]]])
+   [crypticbutter.snoop.impl.cljs :as patched-cljs]
    [crypticbutter.snoop.config :as cfg]
    [taoensso.encore :as enc]
    [malli.core :as m]))
@@ -175,16 +176,6 @@
                       (println "\nSurfacing error below:\n")
                       (throw e)))))
 
-#?(:cljs
-   (defn- meta-fn
-     ;; Taken from https://clojure.atlassian.net/browse/CLJS-3018
-     ;; Because the current MetaFn implementation can cause quirky errors in CLJS
-     [f m]
-     (let [new-f (goog/bind f #js{})]
-       (goog/mixin new-f f)
-       (specify! new-f IMeta (-meta [_] m))
-       new-f)))
-
 (def -defn-option-keys #{::config-atom ::macro-config})
 
 (deftime
@@ -234,7 +225,7 @@
                       (vary-meta fn-name #(enc/remove-keys -defn-option-keys %)))
                     args-for-defn)
              (when (and (:ns &env)  enabled?)
-               [`(set! ~fn-name (meta-fn ~fn-name (enc/assoc-some {} ::config-atom ~(::config-atom opts))))])))))
+               [`(set! ~fn-name (patched-cljs/meta-fn ~fn-name (enc/assoc-some {} ::config-atom ~(::config-atom opts))))])))))
 
 (deftime
   (defmacro >defn
