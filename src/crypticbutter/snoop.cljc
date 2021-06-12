@@ -128,7 +128,7 @@
                                   (when (contains? given-schema :input-unwrapped)
                                     (if (empty? (:input-unwrapped given-schema))
                                       :cat
-                                      (into [:tuple] (:input-unwrapped given-schema)))))
+                                      (into [:cat] (:input-unwrapped given-schema)))))
           given-output-schema (:output given-schema)
           cfg-sym             (gensym)
           output-sym          (gensym)

@@ -40,7 +40,7 @@ Thus, I took the approach of using a `>defn` macro, which has the following bene
 deps.edn:
 
 ```clojure
-com.crypticbutter/snoop {:mvn/version "21-162-alpha3"}
+com.crypticbutter/snoop {:mvn/version "21-164-alpha"}
 metosin/malli {:git/url "https://github.com/metosin/malli.git"
                :sha "69e756185feb04fd4f7d6908162fcda17dd2cba8"}
 ```
@@ -120,7 +120,10 @@ This could make combining defn wrappers easier by allowing you to forward the sc
 via the prepost map. Requires that you are able to set the `defn` symbol used by the
 top-level macro.
 
-### Multiple arities with mixed notations:
+### Multiple arities and variadic functions
+
+You can mix and match notations.
+
 ```clojure
 (>defn add
   ([x]
@@ -130,6 +133,9 @@ top-level macro.
     {:=> [:=> [:cat int? int?] int?]}
     ...)
   ([x y & zs]
+    ;; Either
+    [int? int? [:* int?] => int?]
+    ;; Or
     [[:cat int? int? [:* int?]] int?]
     ...))
 ```

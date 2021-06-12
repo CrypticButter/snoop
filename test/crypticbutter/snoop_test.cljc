@@ -109,6 +109,17 @@
     (is (= 3 (multi-arity 3 4 4)))
     (is (true? (throws? multi-arity 3 "x" "y"))))
 
+  (testing "ghostwheel style with variable arity"
+    (>defn g-var [_ & _more]
+      [int? [:* string?] => :any]
+      true)
+    (is (true? (g-var 3)))
+    (is (true? (g-var 3 "a")))
+    (is (true? (g-var 3 "a" "b")))
+    (is (throws? g-var "a"))
+    (is (throws? g-var 3 3))
+    (is (throws? g-var 3 "a" 3)))
+
   (testing "disable via meta and attr-map"
     (>defn ^{::snoop/macro-config {:enabled? false}}
       d-m []
@@ -211,8 +222,6 @@
   (meta f)
 
   (f 8 8)
-
-
 
   (defn x {:a (inc 0)} [])
 

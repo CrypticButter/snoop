@@ -14,5 +14,7 @@
          deploy {:depends [-jar-location]
                  :task    (clojure "-M:project/clojars" -jar-location)}
 
+         jardeploy {:depends [jar deploy]}
+
          ;;
          }}
