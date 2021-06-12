@@ -2,7 +2,7 @@
 
          chui (shell "./node_modules/.bin/shadow-cljs -A:lib/cider-nrepl watch test-runner")
 
-         test (shell "./bin/kaocha")
+         test (apply shell "./bin/kaocha" *command-line-args*)
 
          -jar-location "target/build/snoop.jar"
 
