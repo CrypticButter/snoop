@@ -29,9 +29,11 @@
     (into [x (* x y)] more))
 
   #_:clj-kondo/ignore
+  ;; optional schemas per param
+  ;; easier to reorder than using a map
   (defn fun
     "does something"
-    [(x int?) (y int?) & (more [:* string?])]  ;; optional schemas per param
+    [(x int?) (y int?) & (more [:* string?])]
     :=> [:tuple int? int?]
     (into [x (* x y)] more))
 
@@ -39,7 +41,7 @@
   (defn fun
     "does something"
     [(x int?) (y int?) & (more [:* string?])]
-    [:=> [:tuple int? int?]]
+    [:=> [:tuple int? int?]] ;; could be used alongside existing schema colocation
     (into [x (* x y)] more))
 
   #_:clj-kondo/ignore

@@ -70,7 +70,7 @@ If there are any problems installing & using, please let me know.
 (require '[crypticbutter.snoop :refer [>defn]])
 ```
 
-The `>defn` macro is backwards compatible with `defn` (you can swap out one
+The `>defn` macro is optionally backwards compatible with `defn` (you can swap out one
 symbol with the other without breaking any code). This makes it more feasible to
 combine multiple defn wrappers (also see the [:defn-sym option](#Compile-time-config)).
 
@@ -87,8 +87,8 @@ There are multiple ways of specifying your schema(s).
 
 ### Inside the function body:
 ```clojure
-(>defn add [x y]
-  [:=> [:cat int? int?] int?]
+(>defn add [x [y z]] ;; You can still use destructuring
+  [:=> [:cat int? [:tuple int? int?]] int?]
   ...)
 ```
 
@@ -107,7 +107,8 @@ There are multiple ways of specifying your schema(s).
 The second schema above uses a similar notation to [ghostwheel](https://github.com/gnl/ghostwheel).
 The `=>` can be substituted with `:=>`, `'=>` or `:ret`
 
-To outstrument a 0-parameter function, you could use `[=> int?]`
+To outstrument a 0-parameter function, you could use `[=> int?]` — this means
+there will be no input validation.
 
 ### Inside the prepost map:
 ```clojure
@@ -147,6 +148,42 @@ Schemas are optional. `>defn` works fine without the schema (acts as a regular
 ```clojure
 (>defn add [x y]
    ;; advanced maths
+  ...)
+```
+
+### Inline Schema
+
+You can choose to depart from the standard `defn` pattern and specify your schemas
+right alongside your function parameters. You will need a custom linter, so you may
+find the included clj-kondo config export useful ([exporting and importing clj-kondo configs](https://github.com/clj-kondo/clj-kondo/blob/master/doc/config.md#exporting-and-importing-configuration)).
+
+```clojure
+(>defn wow
+  [(mickey string?)
+   (mouse) ;; this argument is not validated
+   ({:keys [fun]} MySchema) ;; Destructuring still available
+   house ;; list brackets are optional for schemaless params
+   & (melon [:* int?])]
+  ...)
+```
+
+Note: the inline schemas are validated alongside a schema vector specified before the
+function body. This will always throw an error:
+
+```clojure
+(>defn doom
+  [(x int?)]
+  [string? => :any]
+  ;; x cannot be int and string at the same time
+  ...)
+```
+
+However, this also means that you can use an additional schema vector to specify
+the return schema:
+
+```clojure
+(>defn melon [(x int?) (y int?) (z melon?)]
+  [=> string?]
   ...)
 ```
 

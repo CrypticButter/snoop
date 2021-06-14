@@ -28,11 +28,11 @@
     (is (true? (throws? add "" ""))))
 
   (testing "instrument - ghostwheel style schema"
-    (>defn g-var [_]
+    (>defn g-var-arrow [_]
       [int? => string?]
       "0")
-    (is (= "0" (g-var 5)))
-    (is (true? (throws? g-var "")))
+    (is (= "0" (g-var-arrow 5)))
+    (is (true? (throws? g-var-arrow "")))
 
     (>defn g-sym [_]
       [int? '=> string?]
@@ -51,6 +51,14 @@
       "0")
     (is (= "0" (g-kw-ret 5)))
     (is (true? (throws? g-kw-ret ""))))
+
+  (testing "instrument - inline style schema"
+    (>defn simple-inline-instrument
+      [(_ int?) _ (_)]
+      [=> string?]
+      "0")
+    (is (= "0" (simple-inline-instrument 5 4 3)))
+    (is (true? (throws? simple-inline-instrument ""))))
 
   (testing "outstrument - 0-parameter functions - malli style"
     (>defn f0-m-good []
@@ -120,6 +128,16 @@
     (is (throws? g-var 3 3))
     (is (throws? g-var 3 "a" 3)))
 
+  (testing "inline style with variable arity"
+    (>defn inline-variadic [(_ int?) & (_more [:* string?])]
+      true)
+    (is (true? (inline-variadic 3)))
+    (is (true? (inline-variadic 3 "a")))
+    (is (true? (inline-variadic 3 "a" "b")))
+    (is (throws? inline-variadic "a"))
+    (is (throws? inline-variadic 3 3))
+    (is (throws? inline-variadic 3 "a" 3)))
+
   (testing "disable via meta and attr-map"
     (>defn ^{::snoop/macro-config {:enabled? false}}
       d-m []
@@ -146,6 +164,14 @@
     (is (true? (empty? (select-keys (into {} (map meta)
                                           [(var d-m) (var d-a1) (var d-a2)])
                                     snoop/-defn-option-keys)))))
+
+  (testing "disable function with inline style schema specification"
+    (>defn disabled-inline
+      {::snoop/macro-config {:enabled? false}}
+      [(_x int?) (_y int?)]
+      [=> string?]
+      :melon)
+    (is (= :melon (disabled-inline "a" "b"))))
 
   (testing "custom runtime atom passes through"
     (>defn passthrough

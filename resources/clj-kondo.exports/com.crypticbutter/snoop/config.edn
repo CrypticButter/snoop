@@ -1,2 +1,2 @@
-{:lint-as {crypticbutter.snoop/>defn  clojure.core/defn
-           crypticbutter.snoop/>defn- clojure.core/defn-}}
+{:hooks {:analyze-call {crypticbutter.snoop/>defn  clj-kondo.crypticbutter.snoop/>defn
+                        crypticbutter.snoop/>defn- clj-kondo.crypticbutter.snoop/>defn}}}

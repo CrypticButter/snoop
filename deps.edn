@@ -1,4 +1,4 @@
-{:paths ["src"]
+{:paths ["src" "resources"]
 
  :deps {net.cgrand/macrovich {:mvn/version "0.2.1"}
         com.taoensso/encore  {:mvn/version "3.19.0"}

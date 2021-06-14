@@ -1,8 +1,8 @@
 #kaocha/v1
  {:plugins [:hooks]
-  :tests [{:id   :unit-clj
+  :tests [{:id   :clj
            :type :kaocha.type/clojure.test}
-          {:id :unit-cljs
+          {:id :cljs
            :type :kaocha.type/cljs2
            :shadow/build-id     :test-runner
            :browse-url          "http://localhost:1818"

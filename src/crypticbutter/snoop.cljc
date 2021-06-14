@@ -28,15 +28,25 @@
      [:input :any]
      [:output :any]]]])
 
+(def InstrumentedParamsVec
+  [:and vector?
+   [:*
+    [:altn
+     [:instrumented [:and list?
+                     [:catn
+                      [:param :any]
+                      [:schema [:? :any]]]]]
+     [:param :any]]]])
+
 (def ArityDecl
   [:alt
    [:catn
-    [:params vector?]
+    [:params-decl InstrumentedParamsVec]
     [:prepost-map [:? map?]]
     [:schema [:? FnSchemaDecl]]
     [:body [:+ :any]]]
    [:catn
-    [:params vector?]
+    [:params-decl InstrumentedParamsVec]
     [:prepost-map [:? map?]]
     [:schema [:? FnSchemaDecl]]
     [:body [:* :any]]]])
@@ -110,54 +120,82 @@
     (symbol (str *ns*))))
 
 (deftime
+  (defn- read-param-decl [parsed-arity]
+    {:pre [(:params-decl parsed-arity)]}
+    (let [{:keys [params schema schema-used?]}
+          (reduce (fn [acc [alt decl]]
+                    (let [[param schema] (case alt
+                                           :instrumented
+                                           [(:param decl) (:schema decl)]
+
+                                           :param
+                                           [decl nil])]
+                      (-> acc
+                          (update :params conj param)
+                          (cond-> schema
+                            (-> (update :schema conj schema)
+                                (assoc :schema-used? true)))
+                          (cond-> (not (or schema (= '& decl)))
+                            (update :schema conj :any)))))
+                  {:params []
+                   :schema [:cat]
+                   :schema-used? false}
+                  (:params-decl parsed-arity))]
+      {:params params
+       :schema (when schema-used? schema)})))
+
+(deftime
   (defn- modify-arity-rf
     "Reducing function that processes each arity declared by `>defn`"
-    [acc {:keys [fn-name params schema prepost-map body arity max-fixed-arity]}]
+    [acc {:keys [fn-name schema prepost-map body arityn max-fixed-arity params param-schema]}]
     (let [{:keys [params-vec
-                  args]}      (if (= :varargs arity)
+                  args]}      (if (= :varargs arityn)
                                 (let [fixed-syms (vec (repeatedly max-fixed-arity gensym))
                                       rest-sym   (gensym)]
                                   {:params-vec (into fixed-syms ['& rest-sym])
                                    :args       `(into ~fixed-syms ~rest-sym)})
-                                (let [v (vec (repeatedly arity gensym))]
+                                (let [v (vec (repeatedly arityn gensym))]
                                   {:params-vec v :args v}))
           given-schema        (or schema
                                   (some->> (:=> prepost-map)
                                            (m/parse FnSchemaDecl)))
           given-input-schema  (or (:input given-schema)
-                                  (when (contains? given-schema :input-unwrapped)
-                                    (if (empty? (:input-unwrapped given-schema))
-                                      :cat
-                                      (into [:cat] (:input-unwrapped given-schema)))))
+                                  (when (and (contains? given-schema :input-unwrapped)
+                                             (seq (:input-unwrapped given-schema)))
+                                    (into [:cat] (:input-unwrapped given-schema))))
           given-output-schema (:output given-schema)
           cfg-sym             (gensym)
           output-sym          (gensym)
-          modified-body       `(let [fn-var#        (var ~fn-name)
-                                     ~cfg-sym       (get-snoop-config fn-var#)
-                                     schemas#       ~(if given-schema
-                                                       {:input  given-input-schema
-                                                        :output given-output-schema}
-                                                       `(some-> (get-in (m/function-schemas)
-                                                                        ['~(current-ns) '~fn-name :schema])
-                                                                (m/form)
-                                                                (as-> form#
-                                                                      {:input  (nth form# 1)
-                                                                       :output (nth form# 2)})))
-                                     input-schema#  (:input schemas#)
-                                     output-schema# (:output schemas#)
-                                     validation-ctx# {:fn-sym    '~(symbol (str *ns*) (str fn-name))
-                                                      :fn-params '~params
-                                                      :config ~cfg-sym}]
+          validation-ctx-sym  (gensym)
+          modified-body       `(let [fn-var#             (var ~fn-name)
+                                     ~cfg-sym            (get-snoop-config fn-var#)
+                                     schemas#            ~(if given-schema
+                                                            {:input  given-input-schema
+                                                             :output given-output-schema}
+                                                            `(some-> (get-in (m/function-schemas)
+                                                                             ['~(current-ns) '~fn-name :schema])
+                                                                     (m/form)
+                                                                     (as-> form#
+                                                                           {:input  (nth form# 1)
+                                                                            :output (nth form# 2)})))
+                                     input-schema#       (:input schemas#)
+                                     output-schema#      (:output schemas#)
+                                     ~validation-ctx-sym {:fn-sym    '~(symbol (str *ns*) (str fn-name))
+                                                          :fn-params '~params
+                                                          :config    ~cfg-sym}]
+                                 ~(when param-schema
+                                    `(validate :input ~param-schema ~args ~validation-ctx-sym))
                                  (when input-schema#
-                                   (validate :input input-schema# ~args validation-ctx#))
+                                   (validate :input input-schema# ~args ~validation-ctx-sym))
                                  (let [~params     ~args
                                        ~output-sym (do ~@body)]
                                    (when output-schema#
-                                     (validate :output output-schema# ~output-sym validation-ctx#))
+                                     (validate :output output-schema# ~output-sym ~validation-ctx-sym))
                                    ~output-sym))]
       (-> acc
           (cond-> given-schema
-            (assoc-in [:arities arity] {:input given-input-schema :output given-output-schema}))
+            (assoc-in [:arities arityn] {:input  given-input-schema
+                                         :output given-output-schema}))
           (update :raw-parts conj (list params-vec prepost-map modified-body))))))
 
 (deftime
@@ -191,12 +229,17 @@
                                              -defn-option-keys)
           parsed-arities        (into []
                                       (map (fn [a]
-                                             (assoc a :arity (arity-of-params (:params a)))))
+                                             (let [{:keys        [params]
+                                                    param-schema :schema} (read-param-decl a)]
+                                               (assoc a
+                                                      :arityn (arity-of-params params)
+                                                      :param-schema param-schema
+                                                      :params params))))
                                       (case arity-type
                                         :single-arity (vector code)
                                         :multi-arity  (:defs code)))
           max-fixed-arity       (->> parsed-arities
-                                     (map :arity)
+                                     (map :arityn)
                                      (filter int?)
                                      (apply max 0))
           {:keys [enabled?]
@@ -205,14 +248,15 @@
           sym-for-defn          (:defn-sym macro-cfg)
           attr-map              (cond->> input-attr-map (not enabled?)
                                          (enc/remove-keys -defn-option-keys))
-          {:keys [raw-parts]}   (reduce (fn [acc {:keys [params prepost-map body]
-                                                  :as   parsed-part}]
+          {:keys [raw-parts]}   (reduce (fn [acc {:keys [prepost-map body]
+                                                  :as   parsed-arity}]
                                           (if enabled?
-                                            (modify-arity-rf acc (assoc parsed-part
+                                            (modify-arity-rf acc (assoc parsed-arity
                                                                         :fn-name fn-name
                                                                         :max-fixed-arity max-fixed-arity))
                                             (update acc :raw-parts conj
-                                                    (apply list params prepost-map body))))
+                                                    (apply list (:params (read-param-decl parsed-arity))
+                                                           prepost-map body))))
                                         {:raw-parts [] :arities {}}
                                         parsed-arities)
           args-for-defn         (into (enc/conj-some [] docstring attr-map)
@@ -270,7 +314,7 @@
                                       2 {:input  [:cat int? int?]
                                          :output int?}}})
 
-  (crypticbutter.snoop.core/>defn
+  (crypticbutter.snoop/>defn
     bob
     ([x y]
      [[:cat int? int?] => pos-int?]
@@ -279,7 +323,7 @@
      {:pre []}))
 
   (try (bob 4 -5)
-       (catch js/Error e
+       (catch :default e
          (prn (e))))
 
   (m/validate (get-in (m/function-schemas)
@@ -319,17 +363,12 @@
     {:output (clojure.core/nth form__75413__auto__ 2),
      :input (clojure.core/nth form__75413__auto__ 1)}))
 
-  (xf 4)
-
-  (add 4 "🍉")
-
   (-> (get-in (m/function-schemas) [(symbol (str *ns*)) 'xf :schema])
       m/form)
 
-
   (>defn custom-atom
     {::config-atom (atom (merge @*config
-                                      {:outstrument? false}))}
+                                {:outstrument? false}))}
     []
     [=> int?]
     "melon")
@@ -337,6 +376,25 @@
 
   ;; (def lim ^:dynamic )
   '(assoc {} 8 8)
+
+  (m/parse InstrumentedParamsVec '[x y z])
+
+  (read-param-decl {:params (m/parse InstrumentedParamsVec '[])})
+
+  (macroexpand-1
+   '(crypticbutter.snoop/>defn f
+     ;; {::macro-config {:enabled? true}}
+      [_ & _]
+      []))
+
+  (arity-of-params '[_ & _more])
+
+  (repeatedly 0 gensym)
+
+  (>defn g-var [_ & _more]
+    true)
+
+  (g-var 8 "" "sdf")
 
 ;;
   )
