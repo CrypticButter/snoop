@@ -3,11 +3,14 @@
 
 (defn- read-param-decl [params-node]
   (reduce (fn [acc param-decl]
-            (-> acc
-                (update 0 conj (cond-> param-decl (api/list-node? param-decl)
-                                       (-> :children first)))
-                (cond-> (api/list-node? param-decl)
-                  (update 1 conj (-> param-decl :children second)))))
+            (let [list-children (when (api/list-node? param-decl)
+                                  (:children param-decl))
+                  schema-element (second list-children)]
+              (-> acc
+                  (update 0 conj (or (first list-children) param-decl))
+                  (cond-> (and (some? schema-element)
+                               (not= '=> (api/sexpr schema-element)))
+                    (update 1 conj schema-element)))))
           [[] ;; params
            []] ;; schemas
           (:children params-node)))

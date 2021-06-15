@@ -74,6 +74,9 @@ The `>defn` macro is optionally backwards compatible with `defn` (you can swap o
 symbol with the other without breaking any code). This makes it more feasible to
 combine multiple defn wrappers (also see the [:defn-sym option](#Compile-time-config)).
 
+Enclosed, you will find a clj-kondo config export, for your linting convenience.
+See ([exporting and importing clj-kondo configs](https://github.com/clj-kondo/clj-kondo/blob/master/doc/config.md#exporting-and-importing-configuration)).
+
 There are multiple ways of specifying your schema(s).
 
 ### Using malli's function schema registry:
@@ -95,6 +98,7 @@ There are multiple ways of specifying your schema(s).
 ### More convenient notations that work when using `>defn`:
 ```clojure
 ;; Require `=>` solely to prevent unresolved symbol linting errors
+;; If you are using the provided clj-kondo config, referring `=>` is unnecessary
 (require '[crypticbutter.snoop :refer [>defn =>]])
 
 (>defn add [x y]
