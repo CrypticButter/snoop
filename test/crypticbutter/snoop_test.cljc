@@ -202,58 +202,7 @@
     (is (true? (throws? custom-atom-out)))))
 
 (comment
-  (-> (meta (var custom-atom))
-      ::snoop/config-atom
-      type)
 
-  (custom-atom)
 
-  (macroexpand-1 '(crypticbutter.snoop/>defn custom-atom
-                    {::snoop/config-atom (atom (merge @snoop/*config
-                                                      {:outstrument? false}))}
-                    []
-                    [=> int?]
-                    "melon"))
-
-  @(atom (merge @snoop/*config
-                {:outstrument? false}))
-
-  (snoop/get-snoop-config (var custom-atom))
-
-  (defn x {:a (inc 0)} [])
-  (defn ^{:a (inc 0)} x [])
-  (meta (var x))
-
-  (def foo :foo-val)
-  (def xs {:a 8} [])
-  (meta xs)
-  (alter-meta! xs assoc 8 8)
-
-  (set! ^:butter x (vary-meta x (fn [y] {:some 8})))
-
-  (meta x)
-
-  (>defn passthrough
-    {::snoop/config-atom (atom (merge @snoop/*config
-                                      {:melons true}))}
-    []
-    [=> string?]
-    "melon")
-
-  (some-> (var passthrough) #?(:cljs deref) meta ::snoop/config-atom deref)
-
-  (macroexpand-1
-   (crypticbutter.snoop/>defn f [_ _]
-     []))
-  (meta f)
-
-  (f 8 8)
-
-  (defn x {:a (inc 0)} [])
-
-  (def xp nil)
-  (set! xp (meta-fn x {:a 8}))
-
-  (meta xp)
 ;;
   )

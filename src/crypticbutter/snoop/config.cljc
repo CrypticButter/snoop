@@ -140,12 +140,8 @@
 
 (comment
   (reset! *compiletime-config-cache {:by-id    {}
-                                   :register (enc/queue)})
+                                     :register (enc/queue)})
   @*compiletime-config-cache
-
-  (swap! *config assoc :on-instrument-fail
-         (fn [err]
-           (throw (ex-info "Instrument failed for"))))
 
   ;;
   )
