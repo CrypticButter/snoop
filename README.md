@@ -128,7 +128,7 @@ You can mix and match notations.
 ```clojure
 (>defn add
   ([x]
-    [int? int? => int?]
+    [int? => int?]
     ...)
   ([x y]
     {:=> [:=> [:cat int? int?] int?]}
@@ -185,6 +185,21 @@ the return schema:
 (>defn melon [(x int?) (y int?) (z melon?)]
   [=> string?]
   ...)
+```
+
+As with the other methods, this works with multiple arities:
+
+```clojure
+(>defn add
+  ([(x int?)]
+    [=> int?]
+    ...)
+  ([(x int?) (y int?)]
+    {:=> [=> int?]} ;; return value is int, specified in prepost map
+    ...)
+  ([(x int?) (y int?) & (zs [:* int?])]
+    ;; with no output schema
+    ...))
 ```
 
 ## Configuration
