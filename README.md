@@ -40,7 +40,7 @@ Thus, I took the approach of using a `>defn` macro, which has the following bene
 deps.edn:
 
 ```clojure
-com.crypticbutter/snoop {:mvn/version "21-166-alpha2"}
+com.crypticbutter/snoop {:mvn/version "21-166-alpha"}
 metosin/malli {:git/url "https://github.com/metosin/malli.git"
                :sha "69e756185feb04fd4f7d6908162fcda17dd2cba8"}
 ```
@@ -98,7 +98,6 @@ There are multiple ways of specifying your schema(s).
 ### More convenient notations that work when using `>defn`:
 ```clojure
 ;; Require `=>` solely to prevent unresolved symbol linting errors
-;; If you are using the provided clj-kondo config, referring `=>` is unnecessary
 (require '[crypticbutter.snoop :refer [>defn =>]])
 
 (>defn add [x y]

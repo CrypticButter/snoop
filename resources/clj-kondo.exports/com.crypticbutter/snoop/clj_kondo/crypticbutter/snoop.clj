@@ -8,8 +8,7 @@
                   schema-element (second list-children)]
               (-> acc
                   (update 0 conj (or (first list-children) param-decl))
-                  (cond-> (and (some? schema-element)
-                               (not= '=> (api/sexpr schema-element)))
+                  (cond-> schema-element
                     (update 1 conj schema-element)))))
           [[] ;; params
            []] ;; schemas
