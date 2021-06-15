@@ -167,8 +167,11 @@ find the included clj-kondo config export useful ([exporting and importing clj-k
   ...)
 ```
 
-Note: the inline schemas are validated alongside a schema vector specified before the
-function body. This will always throw an error:
+The disadvantage of this syntax is that you are limited to considering each argument
+individually; You cannot validate the relationship between arguments.
+
+Note that the inline schemas are validated in addition to a schema vector specified
+before the function body. This will always throw an error:
 
 ```clojure
 (>defn doom
