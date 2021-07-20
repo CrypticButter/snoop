@@ -1,0 +1,2 @@
+{:hooks {:analyze-call {crypticbutter.snoop/>defn  clj-kondo.crypticbutter.snoop/>defn
+                        crypticbutter.snoop/>defn- clj-kondo.crypticbutter.snoop/>defn}}}

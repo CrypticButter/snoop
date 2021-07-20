@@ -4,6 +4,7 @@
             [net.cgrand.macrovich :as macrovich :refer [deftime usetime]]))
   (:require
    #?@(:clj [[net.cgrand.macrovich :as macrovich :refer [deftime usetime]]])
+   [clojure.pprint :as pp]
    [crypticbutter.snoop.impl.cljs :as patched-cljs]
    [crypticbutter.snoop.config :as cfg]
    [taoensso.encore :as enc]
@@ -144,6 +145,27 @@
       {:params params
        :schema (when schema-used? schema)})))
 
+(usetime
+ (defn get-arity-schema [arityn form config]
+   (let [schema+ (m/schema form)]
+     (case (m/type schema+)
+       :=> (select-keys (m/-function-info schema+)
+                        #{:input :output})
+       :function
+       (let [singles (m/children schema+)
+             log-error (:log-error-fn config)]
+         (loop [idx (dec (count singles))
+                match nil]
+           (if (neg? idx)
+             (if (nil? match)
+               (log-error "Snoop Error: Could not find matching arity of" arityn "in" schema+)
+               match)
+             (let [{:keys [arity] :as info} (m/-function-info (nth singles idx))]
+               (recur (dec idx)
+                      (if (= arity arityn)
+                        (select-keys info #{:input :output})
+                        match))))))))))
+
 (deftime
   (defn- modify-arity-rf
     "Reducing function that processes each arity declared by `>defn`"
@@ -176,8 +198,7 @@
                                                                              ['~(current-ns) '~fn-name :schema])
                                                                      (m/form)
                                                                      (as-> form#
-                                                                           {:input  (nth form# 1)
-                                                                            :output (nth form# 2)})))
+                                                                           (get-arity-schema ~arityn form# ~cfg-sym))))
                                      input-schema#       (:input schemas#)
                                      output-schema#      (:output schemas#)
                                      ~validation-ctx-sym {:fn-sym    '~(symbol (str *ns*) (str fn-name))
@@ -199,20 +220,22 @@
           (update :raw-parts conj (list params-vec prepost-map modified-body))))))
 
 (deftime
-  (defn- eval-macro-config [macro-config]
-    (when (some nil? (map resolve ['def 'assoc 'merge]))
+  (defn- eval-macro-config [macro-config base-config]
+    (when (some nil? (map resolve ['clojure.core/def 'clojure.core/assoc 'clojure.core/merge]))
       (refer-clojure))
-    (enc/catching (eval macro-config)
+    (enc/catching (enc/merge base-config
+                             (eval macro-config))
                   e
-                  (do (println "ERROR EXPANDING >defn: failed to eval the provided ::snoop/macro-config at compile-time."
-                               "\nMake sure:"
-                               "\n• You have not passed any locals."
-                               "\n• All symbols have been bound at compile-time (eg with 'def')"
-                               "\n"
-                               "\nYou provided:")
-                      (prn macro-config)
-                      (println "\nSurfacing error below:\n")
-                      (throw e)))))
+                  (let [log (resolve (:log-fn-sym base-config))]
+                    (log "ERROR EXPANDING >defn: failed to eval the provided ::snoop/macro-config at compile-time."
+                         "\nMake sure:"
+                         "\n• You have not passed any locals."
+                         "\n• All symbols have been bound at compile-time (eg with 'def')"
+                         "\n"
+                         "\nYou provided:")
+                    (log (with-out-str (pp/pprint macro-config)))
+                    (log "\nSurfacing error below:\n")
+                    (throw e)))))
 
 (def -defn-option-keys #{::config-atom ::macro-config})
 
@@ -224,8 +247,8 @@
            [arity-type
             code] :code
            :as    parse-result} (m/parse InstrumentedDefnArgs args)
-          input-attr-map        (merge (:attr-map parse-result) (:attr-map code))
-          opts                  (select-keys (merge input-attr-map (meta fn-name))
+          input-attr-map        (enc/merge (:attr-map parse-result) (:attr-map code))
+          opts                  (select-keys (enc/merge input-attr-map (meta fn-name))
                                              -defn-option-keys)
           parsed-arities        (into []
                                       (map (fn [a]
@@ -243,8 +266,8 @@
                                      (filter int?)
                                      (apply max 0))
           {:keys [enabled?]
-           :as   macro-cfg}     (merge (cfg/get-compiletime-config)
-                                       (eval-macro-config (::macro-config opts)))
+           :as   macro-cfg}     (eval-macro-config (::macro-config opts)
+                                                   (cfg/get-compiletime-config))
           sym-for-defn          (:defn-sym macro-cfg)
           attr-map              (cond->> input-attr-map (not enabled?)
                                          (enc/remove-keys -defn-option-keys))
@@ -296,6 +319,108 @@
 
 (comment
 
+  (m/=> print [:function
+               [:=> [:cat string?] nil?]
+               [:=> [:cat string? string?] nil?]])
+
+  (macroexpand-1
+   (quote
+    (>defn print
+      ([first] (println first))
+      ([first second] (println first second)))))
+
+  (>defn print
+    ([first]
+
+     (println first))
+    ([first second]
+     [:=> [:cat string? string?] nil?]
+     (println first second)))
+
+  (print "Hello!")
+
+  (m/explain nil? nil)
+
+  (clojure.core/some->
+   (clojure.core/get-in
+    (malli.core/function-schemas)
+    [(quote user) (quote print) :schema])
+   (malli.core/form)
+   (clojure.core/as->
+    form__15071__auto__
+    {:output (clojure.core/nth form__15071__auto__ 2),
+     :input  (clojure.core/nth form__15071__auto__ 1)}))
+
+  (m/validate [:=> {:registry {::small-int [:int {:min -100, :max 100}]}}
+               [:cat ::small-int] :int] (fn []))
+
+  (-> (m/function-schemas)
+      (get-in ['user 'print])
+      :schema
+      m/form
+      m/schema
+      m/-function-info)
+
+  (-> (m/function-schemas)
+      (get-in ['user 'print])
+      :schema
+      m/form
+      m/schema
+      m/type)
+
+  (-> (m/function-schemas)
+      (get-in ['user 'print])
+      :schema
+      m/form
+      m/schema
+      m/type)
+  (m/=> lol [:=> [:cat int?] int?])
+
+  (-> (m/function-schemas)
+      (get-in ['user 'lol])
+      :schema
+      m/form
+      m/schema
+      m/-function-info)
+
+  (-> (m/function-schemas)
+      (get-in ['user 'lol])
+      :schema
+      m/form
+      m/schema
+      m/-function-info)
+
+  (m/children (m/schema [:function {} [:=> [:cat int?] int?]]))
+
+  (m/=> x [:function
+           [:=> [:cat int?] :any]
+           [:=> [:cat int?] :any]])
+  (m/properties [:function {:closed true} [:=> [:cat int?] :any]])
+
+  (require '[malli.util :as mu])
+
+  (m/children [:function {:registry {::small-int [:int {:min -100, :max 100}]}}
+               [:=> [:cat ::small-int] :int]])
+
+  (m/-function-info (m/schema [:=> [:cat :int [:* int?]] :int]))
+
+  (m/=> function-schema-multi [:function
+                               [:=> [:cat int?] int?]
+                               [:=> [:cat map? :any] int?]
+                               [:=> [:cat string? :any [:+ string?]] int?]])
+  (>defn function-schema-multi
+    ([_x]
+     5)
+    ([_x y]
+     y)
+    ([_x y & _zs]
+     y))
+
+  (-> (get-in (m/function-schemas) ['user 'function-schema-multi :schema])
+      (m/form)
+      (as-> f (s/get-arity-schema 1 f @s/*config))
+      (as-> m
+            (:output m)))
 
 ;;
   )

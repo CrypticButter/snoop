@@ -199,7 +199,29 @@
       []
       [=> int?]
       "melon")
-    (is (true? (throws? custom-atom-out)))))
+    (is (true? (throws? custom-atom-out))))
+
+  (testing "m/=> :function schema notation - multi arity"
+    (m/=> function-schema-multi [:function
+                                 [:=> [:cat int?] int?]
+                                 [:=> [:cat map? :any] int?]
+                                 [:=> [:cat string? :any [:+ string?]] int?]])
+    (>defn function-schema-multi
+      ([_x]
+       5)
+      ([_x y]
+       y)
+      ([_x y & _zs]
+       y))
+    (is (false? (throws? function-schema-multi 5)))
+    (is (true? (throws? function-schema-multi "")))
+
+    (is (false? (throws? function-schema-multi {} 5)))
+    (is (true? (throws? function-schema-multi "" 5)))
+    (is (true? (throws? function-schema-multi {} "")))
+
+    (is (false? (throws? function-schema-multi "" 5 "" "")))
+    (is (true? (throws? function-schema-multi "" 5 5 "")))))
 
 (comment
 

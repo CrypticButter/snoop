@@ -19,29 +19,7 @@
             (require '[crypticbutter.snoop.stubs.cljs.env :as cljs.env]))))
 
 (usetime
- (defn throw-validation-error
-   "Default function used to throw errors when in/outstrumentation fails."
-   [{:keys [explainer-error] :as data} boundary]
-   (let [boundary-name (case boundary
-                         :input "Instrument"
-                         :output "Outstrument")
-         print-msg #?(:clj println :cljs js/console.error)
-         data-str #?(:clj pr-str :cljs identity)]
-     (print-msg (str boundary-name " error for:") (:name data))
-     (enc/catching (let [hm (me/humanize explainer-error)]
-                     (case boundary
-                       :input (let [idx (-> hm count dec)]
-                                (print-msg "For param:" (nth (:params data) idx)
-                                           "\nGot:" (data-str (get-in explainer-error [:value idx]))
-                                           "\nError:" (data-str (nth hm idx))))
-                       :output (print-msg "Got:" (data-str (:value explainer-error))
-                                          "\nError:" (data-str hm))))
-                   _ (print-msg "Humanize failed"
-                                "\nGot:" (data-str (:value explainer-error))
-                                "\nErrors:" (data-str (:errors explainer-error))))
-     (throw (ex-info (str boundary-name " failed. See message printed above.") data)))))
-
-(usetime
+ (declare throw-validation-error)
  (def *config
    "The global runtime configuration atom for snoop's instrumented functions.
 
@@ -57,7 +35,31 @@
           :whitelist-fn          {}
           :blacklist-fn          {}
           :blacklist-ns          #{}
-          :whitelist-ns          #{}})))
+          :whitelist-ns          #{}
+          :log-error-fn          #?(:clj println :cljs js/console.error)})))
+
+(usetime
+ (defn throw-validation-error
+   "Default function used to throw errors when in/outstrumentation fails."
+   [{:keys [explainer-error] :as data} boundary]
+   (let [boundary-name (case boundary
+                         :input "Instrument"
+                         :output "Outstrument")
+         log-error (:log-error-fn @*config)
+         data-str #?(:clj pr-str :cljs identity)]
+     (log-error (str boundary-name " error for:") (:name data))
+     (enc/catching (let [hm (me/humanize explainer-error)]
+                     (case boundary
+                       :input (let [idx (-> hm count dec)]
+                                (log-error "For param:" (nth (:params data) idx)
+                                           "\nGot:" (data-str (get-in explainer-error [:value idx]))
+                                           "\nError:" (data-str (nth hm idx))))
+                       :output (log-error "Got:" (data-str (:value explainer-error))
+                                          "\nError:" (data-str hm))))
+                   _ (log-error "Humanize failed"
+                                "\nGot:" (data-str (:value explainer-error))
+                                "\nErrors:" (data-str (:errors explainer-error))))
+     (throw (ex-info (str boundary-name " failed. See message printed above.") data)))))
 
 (deftime
   (def ^:private production-cljs-compiler?
@@ -82,10 +84,11 @@
 
 (deftime
   (def *compiletime-config-cache (atom {:by-id    {}
-                                      :register (enc/queue)})))
+                                        :register (enc/queue)})))
 
 (deftime
-  (def compiletime-config-defaults {:defn-sym 'clojure.core/defn}))
+  (def compiletime-config-defaults {:defn-sym 'clojure.core/defn
+                                    :log-fn-sym 'clojure.core/println}))
 
 (deftime
   (defn- get-compiletime-config* []
@@ -93,8 +96,8 @@
       (throw (ex-info "Snoop enabled with production compiler options" {})))
     (let [file-config   (when (get-system-propery "snoop.enabled")
                           (or (read-config-file) {}))
-          merged-config (merge file-config (get-cljs-compiler-config))]
-      (merge compiletime-config-defaults
+          merged-config (enc/merge file-config (get-cljs-compiler-config))]
+      (enc/merge compiletime-config-defaults
              (if (and (some? merged-config) (not (contains? merged-config :enabled?)))
                (assoc merged-config :enabled? true)
                merged-config)))))
@@ -124,12 +127,14 @@
 
 (deftime
   (defmacro ^:private notify-enabled-state []
-    (when (and (get-system-propery "snoop.enabled")
-               (not (map? (read-config-file))))
-      (println "\u001B[31mWARNING: snoop.enabled is set but we could not find a map in a snoop.edn file.\u001B[m"))
-    (if (:enabled? (get-compiletime-config))
-      (println "\u001B[33mBeware: Snoop is snooping and performance may be affected.\u001B[m")
-      (println "\u001B[32mSnoop is disabled\u001B[m"))))
+    (let [config (get-compiletime-config)
+          log (resolve (:log-fn-sym config))]
+      (when (and (get-system-propery "snoop.enabled")
+                 (not (map? (read-config-file))))
+        (log "\u001B[31mWARNING: snoop.enabled is set but we could not find a map in a snoop.edn file.\u001B[m"))
+      (if (:enabled? config)
+        (log "\u001B[33mBeware: Snoop is snooping and performance may be affected.\u001B[m")
+        (log "\u001B[32mSnoop is disabled\u001B[m")))))
 
 (usetime
  (defonce ^:private *notified? (atom false))

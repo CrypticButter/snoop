@@ -14,6 +14,7 @@
          deploy {:depends [-jar-location]
                  :task    (clojure "-M:project/clojars" -jar-location)}
 
+         ;; To deploy with username & password
          jardeploy {:depends [jar deploy]}
 
          ;;

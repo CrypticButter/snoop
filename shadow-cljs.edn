@@ -1,4 +1,5 @@
-{:deps {:aliases [:dev :test :test-runner]}
+;;
+{:deps {:aliases [:cljs :test :test-runner]}
 
  :builds
  {:test-runner {:target    :browser-test

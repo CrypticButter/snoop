@@ -1,0 +1,6 @@
+#+TITLE: Testing
+
+- If testing ClojureScript, install and run [[https://github.com/lambdaisland/funnel][Funnel]].
+- Run =bb test= (executes =./bin/kaocha= — see the [[https://cljdoc.org/d/lambdaisland/kaocha/1.0.732/doc/4-running-kaocha-cli][Kaocha docs]])
+  - or individual tests: =bb test clj=; =bb test cljs=
+  - Test specifications are in =tests.edn=

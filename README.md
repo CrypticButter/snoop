@@ -40,9 +40,9 @@ Thus, I took the approach of using a `>defn` macro, which has the following bene
 deps.edn:
 
 ```clojure
-com.crypticbutter/snoop {:mvn/version "21-166-alpha"}
+com.crypticbutter/snoop {:mvn/version "21-201-alpha"}
 metosin/malli {:git/url "https://github.com/metosin/malli.git"
-               :sha "69e756185feb04fd4f7d6908162fcda17dd2cba8"}
+               :sha "7ac9e714b3cca5d7240ba4ee561c90b3a12502a4"}
 ```
 
 **Note:** The latest release of malli as of writing is `0.5.1`. You will probably be
@@ -217,28 +217,30 @@ There are two main global configurations and they can be overrided for individua
 At runtime, you are able to modify the `crypticbutter.snoop/*config` atom,
 which affects the behaviour of instrumented functions.
 
-| Key | Default | Description |
-| --- | --- | ---
-| `:on-instrument-fail` | | Function to call when the input is not valid. Receives single argument. |
-| `:on-outstrument-fail` | | Function to call when the output is not valid. Receives single argument. |
-| `:malli-opts`         | {} | Given to `m/explain` which is used for validation. |
-| `:instrument?`        | true | Whether to enable validation on a function's arguments. |
-| `:outstrument?`       | true | Whether to enable validation on a function's return value. |
-| `:whitelist-by-default` | true | Determines whether validation is allowed on functions by default. If set to false, functions must be whitelisted in order for validation to occur. |
-| `:blacklist-ns` | #{} | Set of namespace symbols for which in/outstrumentation should be disallowed. |
-| `:whitelist-ns` | #{} | Similar to above but allows validation in the namespaces. Only useful if `:whitelist-by-default` is false. |
-| `:whitelist-fn` | {} | Maps namespace symbols to sets of function symbols whose validation should be allowed. Overrides the namespace rules above. |
-| `:blacklist-fn` | {} | Similar to above but disallows validation. |
+| Key                     | Default                                 | Description                                                                                                                                        |
+| ---                     | ---                                     | ---                                                                                                                                                |
+| `:on-instrument-fail`   |                                         | Function to call when the input is not valid. Receives single argument.                                                                            |
+| `:on-outstrument-fail`  |                                         | Function to call when the output is not valid. Receives single argument.                                                                           |
+| `:log-error-fn`         | #?(:clj println :cljs js/console.error) | Used to log errors at runtime. Must be variadic.                                                                                                   |
+| `:malli-opts`           | {}                                      | Given to `m/explain` which is used for validation.                                                                                                 |
+| `:instrument?`          | true                                    | Whether to enable validation on a function's arguments.                                                                                            |
+| `:outstrument?`         | true                                    | Whether to enable validation on a function's return value.                                                                                         |
+| `:whitelist-by-default` | true                                    | Determines whether validation is allowed on functions by default. If set to false, functions must be whitelisted in order for validation to occur. |
+| `:blacklist-ns`         | #{}                                     | Set of namespace symbols for which in/outstrumentation should be disallowed.                                                                       |
+| `:whitelist-ns`         | #{}                                     | Similar to above but allows validation in the namespaces. Only useful if `:whitelist-by-default` is false.                                         |
+| `:whitelist-fn`         | {}                                      | Maps namespace symbols to sets of function symbols whose validation should be allowed. Overrides the namespace rules above.                        |
+| `:blacklist-fn`         | {}                                      | Similar to above but disallows validation.                                                                                                         |
 
 ### Compile-time config
 
 You can also modify the config used by the macros. This can be done in `snoop.edn`
 or via the CLJS compiler options (see [Installation](#Installation)).
 
-| Key | Default | Description
-| --- | --- | ---
-| :enabled? | `true` (only if config provided) | Whether to augment the function body with instrumentation features. This is the master switch, and should not be true in a production build.
-| :defn-sym | `'clojure.core/defn` | The symbol to use for `defn`. This allows you to combine `defn` wrappers as long as their structures are compatible with the core `defn` macro (you can forward data via metadata or prepost maps).
+| Key         | Default                          | Description                                                                                                                                                                                         |
+| ---         | ---                              | ---                                                                                                                                                                                                 |
+| :enabled?   | `true` (only if config provided) | Whether to augment the function body with instrumentation features. This is the master switch, and should not be true in a production build.                                                        |
+| :defn-sym   | `clojure.core/defn`              | The *symbol* to use for `defn`. This allows you to combine `defn` wrappers as long as their structures are compatible with the core `defn` macro (you can forward data via metadata or prepost maps). |
+| :log-fn-sym | `clojure.core/println`           | The *symbol* used to resolve the function used for logging messages during compile-time. |
 
 ### Per-function config
 
@@ -282,3 +284,9 @@ issues you run into whilst using this library.
 ---
 
 <img align="right" src="https://user-images.githubusercontent.com/41270840/121725121-bf8b6200-cae0-11eb-8d25-4fd0807f4b8e.png">
+
+# License
+
+Copyright © 2021 Luis Thiam-Nye and contributors.
+
+Distributed under Eclipse Public License 2.0, see [[./LICENSE][LICENSE]].
