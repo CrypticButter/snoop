@@ -88,6 +88,8 @@ There are multiple ways of specifying your schema(s).
 (>defn add [x y] ...)
 ```
 
+The schema specified with `m/=>` will be ignored if any schema is specified within the function body.
+
 ### Inside the function body:
 ```clojure
 (>defn add [x [y z]] ;; You can still use destructuring
@@ -120,9 +122,9 @@ there will be no input validation.
   ...)
 ```
 
-This could make combining defn wrappers easier by allowing you to forward the schema
-via the prepost map. Requires that you are able to set the `defn` symbol used by the
-top-level macro.
+The main motivation for this option is that it could make combining defn wrappers
+easier by allowing you to forward the schema via the prepost map. Requires that you
+are able to set the `defn` symbol used by the top-level macro.
 
 ### Multiple arities and variadic functions
 
@@ -138,10 +140,23 @@ You can mix and match notations.
     ...)
   ([x y & zs]
     ;; Either
-    [int? int? [:* int?] => int?]
+    [int? int? [:+ int?] => int?]
     ;; Or
-    [[:cat int? int? [:* int?]] int?]
+    [[:cat int? int? [:+ int?]] int?]
     ...))
+```
+
+You could also use `m/=>`.
+
+```clojure
+(m/=> add [:function
+           [:=> [:cat int?] int?]
+           [:=> [:cat int? int?] int?]
+           [:=> [:cat int? int? [:+ int?]] int?]])
+(>defn add
+  ([x] ...)
+  ([x y] ...)
+  ([x y & zs] ...))
 ```
 
 ### No schema
@@ -173,8 +188,8 @@ find the included clj-kondo config export useful ([exporting and importing clj-k
 The disadvantage of this syntax is that you are limited to considering each argument
 individually; You cannot validate the relationship between arguments.
 
-Note that the inline schemas are validated in addition to a schema vector specified
-before the function body. This will always throw an error:
+Note that the inline schemas are used for validation *in addition* to any schema specified
+before the function body (or any schema defined with `m/=>`). For example, this will always throw an error:
 
 ```clojure
 (>defn doom
@@ -272,8 +287,7 @@ ClojureScript, this will be attached to the metadata of the function object beca
 
 ## Improvements to be made
 
-- [ ] Be able to use multi-arity function schemas when using `m/=>` eg `[:function [:=> ...`
-- [ ] In `>defn`, combine schemas for each arity into a single schema and call `m/=>`
+- [ ] In `>defn`, combine schemas for each arity into a single schema and call `m/=>`. Would be useful for malli.dev static schema checking facilities.
 at runtime to register a schema passed via the prepost map or body.
 - [ ] Provide facilities to allow valiation to be done in a different thread in CLJS.
 - [ ] Option for asynchronous checking in Clojure JVM
@@ -289,4 +303,4 @@ issues you run into whilst using this library.
 
 Copyright © 2021 Luis Thiam-Nye and contributors.
 
-Distributed under Eclipse Public License 2.0, see [[./LICENSE][LICENSE]].
+Distributed under Eclipse Public License 2.0, see [LICENSE](./LICENSE).
