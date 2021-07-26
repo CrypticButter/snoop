@@ -47,7 +47,8 @@
                          :output "Outstrument")
          log-error (:log-error-fn @*config)
          data-str #?(:clj pr-str :cljs identity)]
-     (log-error (str boundary-name " error for:") (symbol (:ns data) (:name data)))
+     (log-error (str boundary-name " error for:") (symbol (str (:ns data))
+                                                          (str (:name data))))
      (enc/catching (let [hm (me/humanize explainer-error)]
                      (case boundary
                        :input (let [idx (-> hm count dec)]
@@ -98,9 +99,9 @@
                           (or (read-config-file) {}))
           merged-config (enc/merge file-config (get-cljs-compiler-config))]
       (enc/merge compiletime-config-defaults
-             (if (and (some? merged-config) (not (contains? merged-config :enabled?)))
-               (assoc merged-config :enabled? true)
-               merged-config)))))
+                 (if (and (some? merged-config) (not (contains? merged-config :enabled?)))
+                   (assoc merged-config :enabled? true)
+                   merged-config)))))
 
 (deftime
   (defn get-compiletime-config []
