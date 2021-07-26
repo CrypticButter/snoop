@@ -40,7 +40,7 @@ Thus, I took the approach of using a `>defn` macro, which has the following bene
 deps.edn:
 
 ```clojure
-com.crypticbutter/snoop {:mvn/version "21-201-alpha"}
+com.crypticbutter/snoop {:mvn/version "21-207-alpha"}
 metosin/malli {:git/url "https://github.com/metosin/malli.git"
                :sha "7ac9e714b3cca5d7240ba4ee561c90b3a12502a4"}
 ```
