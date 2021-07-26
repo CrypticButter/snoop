@@ -47,7 +47,7 @@
                          :output "Outstrument")
          log-error (:log-error-fn @*config)
          data-str #?(:clj pr-str :cljs identity)]
-     (log-error (str boundary-name " error for:") (str (:ns data) "/" (:name data)))
+     (log-error (str boundary-name " error for:") (symbol (:ns data) (:name data)))
      (enc/catching (let [hm (me/humanize explainer-error)]
                      (case boundary
                        :input (let [idx (-> hm count dec)]
