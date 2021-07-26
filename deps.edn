@@ -6,6 +6,10 @@
                               :sha "7ac9e714b3cca5d7240ba4ee561c90b3a12502a4"}}
 
  :aliases {:cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "2.15.2"}}}
+           :dev {:extra-paths ["src-dev"]
+                 :extra-deps {cider/cider-nrepl {:mvn/version "0.26.0"}
+                              nrepl/nrepl {:mvn/version "0.8.3"}
+                              cider/piggieback     {:mvn/version "0.5.2"}}}
            :test {:extra-paths ["test"]}
            :test-runner {:extra-paths ["test"]
                          :extra-deps {lambdaisland/kaocha          {:mvn/version "1.0.861"}

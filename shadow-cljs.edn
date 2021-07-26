@@ -1,8 +1,13 @@
 ;;
-{:deps {:aliases [:cljs :test :test-runner]}
+{:deps {:aliases [:cljs :test :test-runner :dev]}
 
  :builds
- {:test-runner {:target    :browser-test
+ {:dev {:target :node-script
+        :main main/-main
+        :dev {:compiler-options {:external-config {:crypticbutter.snoop {}}}}
+        :output-to "target/dev.js"}
+
+  :test-runner {:target    :browser-test
                 :runner-ns kaocha.cljs2.shadow-runner
                 :test-dir  "target/kaocha-test"
                 :ns-regexp ".*-test$"
