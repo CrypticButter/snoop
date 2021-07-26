@@ -169,7 +169,7 @@
 (deftime
   (defn- modify-arity-rf
     "Reducing function that processes each arity declared by `>defn`"
-    [acc {:keys [fn-name schema prepost-map body arityn max-fixed-arity params param-schema ns-name]}]
+    [acc {:keys [fn-name schema prepost-map body arityn max-fixed-arity params param-schema]}]
     (let [{:keys [params-vec
                   args]}      (if (= :varargs arityn)
                                 (let [fixed-syms (vec (repeatedly max-fixed-arity gensym))
@@ -201,7 +201,7 @@
                                                                            (get-arity-schema ~arityn form# ~cfg-sym))))
                                      input-schema#       (:input schemas#)
                                      output-schema#      (:output schemas#)
-                                     ~validation-ctx-sym {:fn-sym    '~(symbol (or (some-> ns-name name) (str *ns*)) (str fn-name))
+                                     ~validation-ctx-sym {:fn-sym    '~(symbol (str *ns*) (str fn-name))
                                                           :fn-params '~params
                                                           :config    ~cfg-sym}]
                                  ~(when param-schema
@@ -276,9 +276,6 @@
                                           (if enabled?
                                             (modify-arity-rf acc (assoc parsed-arity
                                                                         :fn-name fn-name
-                                                                        :ns-name (some-> &env
-                                                                                         :ns
-                                                                                         :name)
                                                                         :max-fixed-arity max-fixed-arity))
                                             (update acc :raw-parts conj
                                                     (apply list (:params (read-param-decl parsed-arity))
