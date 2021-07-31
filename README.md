@@ -42,8 +42,10 @@ deps.edn:
 ```clojure
 com.crypticbutter/snoop {:mvn/version "21-212-alpha"}
 metosin/malli {:git/url "https://github.com/metosin/malli.git"
-               :sha "7ac9e714b3cca5d7240ba4ee561c90b3a12502a4"}
+               :sha "f571fda9f1264e7f50ceb6454852f4b577b0112b"}
 ```
+
+(Also see [the changelog](./CHANGELOG.org))
 
 **Note:** The latest release of malli as of writing is `0.5.1`. You will probably be
 fine with this version but I've found there can be some problems in certain
@@ -298,6 +300,14 @@ issues you run into whilst using this library.
 ---
 
 <img align="right" src="https://user-images.githubusercontent.com/41270840/121725121-bf8b6200-cae0-11eb-8d25-4fd0807f4b8e.png">
+
+# Contributing
+
+See [development](./docs/development.adoc)
+
+And ensure the tests pass: [testing](./docs/testing.org)
+
+I'll publish more details in the future.
 
 # License
 
