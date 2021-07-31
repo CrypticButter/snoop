@@ -57,9 +57,9 @@
                                            "\nError:" (data-str (nth hm idx))))
                        :output (log-error "Got:" (data-str (:value explainer-error))
                                           "\nError:" (data-str hm))))
-                   _ (log-error "Humanize failed"
-                                "\nGot:" (data-str (:value explainer-error))
-                                "\nErrors:" (data-str (:errors explainer-error))))
+       _ (log-error "Humanize failed"
+                    "\nGot:" (data-str (:value explainer-error))
+                    "\nErrors:" (data-str (:errors explainer-error))))
      (throw (ex-info (str boundary-name " failed. See message printed above.") data)))))
 
 (deftime
@@ -93,15 +93,17 @@
 
 (deftime
   (defn- get-compiletime-config* []
-    (when production-cljs-compiler?
-      (throw (ex-info "Snoop enabled with production compiler options" {})))
     (let [file-config   (when (get-system-propery "snoop.enabled")
                           (or (read-config-file) {}))
-          merged-config (enc/merge file-config (get-cljs-compiler-config))]
-      (enc/merge compiletime-config-defaults
-                 (if (and (some? merged-config) (not (contains? merged-config :enabled?)))
-                   (assoc merged-config :enabled? true)
-                   merged-config)))))
+          supplied-config (enc/merge file-config (get-cljs-compiler-config))
+          complete-config (enc/merge compiletime-config-defaults
+                                     (cond-> supplied-config
+                                       (and (some? supplied-config)
+                                            (not (contains? supplied-config :enabled?)))
+                                       (assoc :enabled? true)))]
+      (when (and production-cljs-compiler? (:enabled? complete-config))
+        (throw (ex-info "🚨 Snoop enabled with production compiler options 🚨" {})))
+      complete-config)))
 
 (deftime
   (defn get-compiletime-config []
