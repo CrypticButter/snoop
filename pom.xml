@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <groupId>com.crypticbutter</groupId>
   <artifactId>snoop</artifactId>
-  <version>21-207-alpha2</version>
+  <version>21-212-alpha</version>
   <name>snoop</name>
   <description>Function instrumentation using malli schemas.</description>
   <licenses>

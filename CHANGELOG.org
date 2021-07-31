@@ -1,6 +1,14 @@
 #+TITLE: Changelog
 
-* 21-201
+* 21-212-alpha
+** Fixes:
+   - No longer throws an error when compiling for cljs production (even when disabled in the config) (#4) (issue: #3)
 
+* 21-207-alpha2
+** Changes:
+  - -strument errors now show the full symbol (with namespace) of the violated function (#2)
+
+* 21-201-alpha
+** Features:
   - You can now specify a multi-arity function schema via =malli.core/=>= (that looks like =[:function [:=> ...]]=
   - Added ability to swap out the logging functions (see =:log-error-fn= and =:log-fn-sym=)
