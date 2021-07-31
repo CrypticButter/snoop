@@ -80,8 +80,11 @@
 
 (deftime
   (defn- get-cljs-compiler-config []
-    (when cljs.env/*compiler*
-      (get-in @cljs.env/*compiler* [:options :external-config :crypticbutter.snoop]))))
+    (when-let [config (when cljs.env/*compiler*
+                   (get-in @cljs.env/*compiler* [:options :external-config :crypticbutter.snoop]))]
+      (when production-cljs-compiler?
+        (throw (ex-info "Snoop enabled with production compiler options" {})))
+      config)))
 
 (deftime
   (def *compiletime-config-cache (atom {:by-id    {}
@@ -93,8 +96,6 @@
 
 (deftime
   (defn- get-compiletime-config* []
-    (when production-cljs-compiler?
-      (throw (ex-info "Snoop enabled with production compiler options" {})))
     (let [file-config   (when (get-system-propery "snoop.enabled")
                           (or (read-config-file) {}))
           merged-config (enc/merge file-config (get-cljs-compiler-config))]
