@@ -7,6 +7,15 @@
         :dev {:compiler-options {:external-config {:crypticbutter.snoop {}}}}
         :output-to "target/dev.js"}
 
+  :test-disabled {:target :node-script
+                  :main cljs-main/-main
+                  :compiler-options {:external-config {;;
+                                                       ;; :crypticbutter.snoop {}
+                                                       ;; :crypticbutter.snoop {:enabled? false}
+                                                       ;;
+                                                       }}
+                  :output-to "target/prod.js"}
+
   :test-runner {:target    :browser-test
                 :runner-ns kaocha.cljs2.shadow-runner
                 :test-dir  "target/kaocha-test"
