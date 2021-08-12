@@ -41,8 +41,7 @@ deps.edn:
 
 ```clojure
 com.crypticbutter/snoop {:mvn/version "21-212-alpha"}
-metosin/malli {:git/url "https://github.com/metosin/malli.git"
-               :sha "f571fda9f1264e7f50ceb6454852f4b577b0112b"}
+metosin/malli {:mvn/version "0.6.1"} ;; or later
 ```
 
 (Also see [the changelog](./CHANGELOG.org))
