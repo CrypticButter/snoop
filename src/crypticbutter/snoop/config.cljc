@@ -49,14 +49,23 @@
          data-str #?(:clj pr-str :cljs identity)]
      (log-error (str boundary-name " error for:") (symbol (str (:ns data))
                                                           (str (:name data))))
-     (enc/catching (let [hm (me/humanize explainer-error)]
+     (enc/catching (let [hm-errors (me/humanize explainer-error)]
                      (case boundary
-                       :input (let [idx (-> hm count dec)]
-                                (log-error "For param:" (nth (:params data) idx)
-                                           "\nGot:" (data-str (get-in explainer-error [:value idx]))
-                                           "\nError:" (data-str (nth hm idx))))
+                       :input (let [params (:params data)
+                                    fixed-args-count (- (count params) 2)
+                                    varargs? (= '& (get params fixed-args-count))]
+                                (loop [idx 0]
+                                  (when (< idx (count hm-errors))
+                                    (let [err (nth hm-errors idx)
+                                          in-vararg? (and varargs? (<= fixed-args-count idx))]
+                                      (when err
+                                        (log-error (cond-> "For param:" in-vararg? (str " &"))
+                                                   (nth params (if in-vararg? (inc fixed-args-count) idx))
+                                                   "\nGot:" (data-str (get-in explainer-error [:value idx]))
+                                                   "\nError:" (data-str err)))
+                                      (recur (inc idx))))))
                        :output (log-error "Got:" (data-str (:value explainer-error))
-                                          "\nError:" (data-str hm))))
+                                          "\nError:" (data-str hm-errors))))
        _ (log-error "Humanize failed"
                     "\nGot:" (data-str (:value explainer-error))
                     "\nErrors:" (data-str (:errors explainer-error))))

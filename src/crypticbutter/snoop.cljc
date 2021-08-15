@@ -167,17 +167,29 @@
                         match))))))))))
 
 (deftime
+  (defn- gen-param-syms [n]
+    (vec (repeatedly n #(gensym "param"))))
+
   (defn- modify-arity-rf
     "Reducing function that processes each arity declared by `>defn`"
     [acc {:keys [fn-name schema prepost-map body arityn max-fixed-arity params param-schema]}]
-    (let [{:keys [params-vec
-                  args]}      (if (= :varargs arityn)
-                                (let [fixed-syms (vec (repeatedly max-fixed-arity gensym))
-                                      rest-sym   (gensym)]
-                                  {:params-vec (into fixed-syms ['& rest-sym])
-                                   :args       `(into ~fixed-syms ~rest-sym)})
-                                (let [v (vec (repeatedly arityn gensym))]
-                                  {:params-vec v :args v}))
+    (let [map-splice? (and (= :varargs arityn)
+                           (let [last-param (peek params)]
+                             (or (map? last-param)
+                                 (and (list? last-param) (map? (first last-param))))))
+          new-params (if map-splice? (into [] (remove #{'&}) params) params)
+          {:keys [params-proxy
+                  arg-capture-expr]} (if (= :varargs arityn)
+                                       (let [fixed-syms (gen-param-syms max-fixed-arity)
+                                             rest-sym   (gensym "rest")]
+                                         {:params-proxy (into fixed-syms (if map-splice?
+                                                                           ['& {:as rest-sym}]
+                                                                           ['& rest-sym]))
+                                          :arg-capture-expr (if map-splice?
+                                                              (conj fixed-syms rest-sym)
+                                                              `(into ~fixed-syms ~rest-sym))})
+                                       (let [v (gen-param-syms arityn)]
+                                         {:params-proxy v :arg-capture-expr v}))
           given-schema        (or schema
                                   (some->> (:=> prepost-map)
                                            (m/parse FnSchemaDecl)))
@@ -186,9 +198,11 @@
                                              (seq (:input-unwrapped given-schema)))
                                     (into [:cat] (:input-unwrapped given-schema))))
           given-output-schema (:output given-schema)
-          cfg-sym             (gensym)
-          output-sym          (gensym)
-          validation-ctx-sym  (gensym)
+          cfg-sym             (gensym "cfg")
+          output-sym          (gensym "output")
+          validation-ctx-sym  (gensym "validation-ctx")
+          args-sym (gensym "args")
+          validation-args-sym (gensym "validation-args")
           modified-body       `(let [fn-var#             (var ~fn-name)
                                      ~cfg-sym            (get-snoop-config fn-var#)
                                      schemas#            ~(if given-schema
@@ -203,12 +217,16 @@
                                      output-schema#      (:output schemas#)
                                      ~validation-ctx-sym {:fn-sym    '~(symbol (str *ns*) (str fn-name))
                                                           :fn-params '~params
-                                                          :config    ~cfg-sym}]
+                                                          :config    ~cfg-sym}
+                                     ~args-sym ~arg-capture-expr
+                                     ~validation-args-sym ~(if map-splice?
+                                                             `(update ~args-sym ~max-fixed-arity #(or % {}))
+                                                             args-sym)]
                                  ~(when param-schema
-                                    `(validate :input ~param-schema ~args ~validation-ctx-sym))
+                                    `(validate :input ~param-schema ~validation-args-sym ~validation-ctx-sym))
                                  (when input-schema#
-                                   (validate :input input-schema# ~args ~validation-ctx-sym))
-                                 (let [~params     ~args
+                                   (validate :input input-schema# ~validation-args-sym ~validation-ctx-sym))
+                                 (let [~new-params     ~args-sym
                                        ~output-sym (do ~@body)]
                                    (when output-schema#
                                      (validate :output output-schema# ~output-sym ~validation-ctx-sym))
@@ -217,7 +235,7 @@
           (cond-> given-schema
             (assoc-in [:arities arityn] {:input  given-input-schema
                                          :output given-output-schema}))
-          (update :raw-parts conj (list params-vec prepost-map modified-body))))))
+          (update :raw-parts conj (list params-proxy prepost-map modified-body))))))
 
 (deftime
   (defn- eval-macro-config [macro-config base-config]
@@ -225,17 +243,17 @@
       (refer-clojure))
     (enc/catching (enc/merge base-config
                              (eval macro-config))
-                  e
-                  (let [log (resolve (:log-fn-sym base-config))]
-                    (log "ERROR EXPANDING >defn: failed to eval the provided ::snoop/macro-config at compile-time."
-                         "\nMake sure:"
-                         "\n• You have not passed any locals."
-                         "\n• All symbols have been bound at compile-time (eg with 'def')"
-                         "\n"
-                         "\nYou provided:")
-                    (log (with-out-str (pp/pprint macro-config)))
-                    (log "\nSurfacing error below:\n")
-                    (throw e)))))
+      e
+      (let [log (resolve (:log-fn-sym base-config))]
+        (log "ERROR EXPANDING >defn: failed to eval the provided ::snoop/macro-config at compile-time."
+             "\nMake sure:"
+             "\n• You have not passed any locals."
+             "\n• All symbols have been bound at compile-time (eg with 'def')"
+             "\n"
+             "\nYou provided:")
+        (log (with-out-str (pp/pprint macro-config)))
+        (log "\nSurfacing error below:\n")
+        (throw e)))))
 
 (def -defn-option-keys #{::config-atom ::macro-config})
 
@@ -262,8 +280,10 @@
                                         :single-arity (vector code)
                                         :multi-arity  (:defs code)))
           max-fixed-arity       (->> parsed-arities
-                                     (map :arityn)
-                                     (filter int?)
+                                     (mapv (fn [{:keys [arityn params]}]
+                                             (if (int? arityn)
+                                               arityn
+                                               (- (count params) 2))))
                                      (apply max 0))
           {:keys [enabled?]
            :as   macro-cfg}     (eval-macro-config (::macro-config opts)

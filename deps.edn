@@ -2,8 +2,7 @@
 
  :deps {net.cgrand/macrovich {:mvn/version "0.2.1"}
         com.taoensso/encore  {:mvn/version "3.19.0"}
-        metosin/malli        {:git/url "https://github.com/metosin/malli.git"
-                              :sha "7ac9e714b3cca5d7240ba4ee561c90b3a12502a4"}}
+        metosin/malli        {:mvn/version "0.6.1"}}
 
  :aliases {:cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "2.15.2"}}}
            :dev {:extra-paths ["src-dev"]

@@ -138,6 +138,16 @@
     (is (throws? inline-variadic 3 3))
     (is (throws? inline-variadic 3 "a" 3)))
 
+  (testing "variable arity + map destructuring"
+    (>defn inline-map-variadic [(i [:maybe int?]) & ({:keys [x]} [:map {:closed true} [:x {:optional true} string?]])]
+      [:=> some?]
+      (boolean (or i x)))
+    (is (true? (inline-map-variadic 3)))
+    (is (true? (inline-map-variadic nil :x "a")))
+    (is (throws? inline-map-variadic "a"))
+    (is (throws? inline-map-variadic 3 :x 3))
+    (is (throws? inline-map-variadic 3 :y "a")))
+
   (testing "disable via meta and attr-map"
     (>defn ^{::snoop/macro-config {:enabled? false}}
       d-m []
