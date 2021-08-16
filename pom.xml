@@ -4,14 +4,14 @@
   <packaging>jar</packaging>
   <groupId>com.crypticbutter</groupId>
   <artifactId>snoop</artifactId>
-  <version>21-212-alpha</version>
+  <version>21-228-alpha</version>
   <name>snoop</name>
   <description>Function instrumentation using malli schemas.</description>
   <licenses>
-      <license>
-          <name>Eclipse Public License 2.0</name>
-          <url>http://www.eclipse.org/legal/epl-v20.html</url>
-      </license>
+    <license>
+      <name>Eclipse Public License 2.0</name>
+      <url>http://www.eclipse.org/legal/epl-v20.html</url>
+    </license>
   </licenses>
   <dependencies>
     <dependency>

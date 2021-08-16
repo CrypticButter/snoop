@@ -1,5 +1,9 @@
 #+TITLE: Changelog
 
+* 21-228-alpha
+** Features:
+   - *[BREAKING CHANGE]* Better support for keyword argument functions (see README). The keyword args are treated as an additional map argument rather than variadic input.
+
 * 21-212-alpha
 ** Fixes:
    - No longer throws an error when compiling for cljs production (even when disabled in the config) (#4) (issue: #3)

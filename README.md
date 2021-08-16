@@ -40,16 +40,11 @@ Thus, I took the approach of using a `>defn` macro, which has the following bene
 deps.edn:
 
 ```clojure
-com.crypticbutter/snoop {:mvn/version "21-212-alpha"}
-metosin/malli {:git/url "https://github.com/metosin/malli.git"
-               :sha "f571fda9f1264e7f50ceb6454852f4b577b0112b"}
+com.crypticbutter/snoop {:mvn/version "21-228-alpha"}
+metosin/malli {:mvn/version "LATEST"}
 ```
 
 (Also see [the changelog](./CHANGELOG.org))
-
-**Note:** The latest release of malli as of writing is `0.5.1`. You will probably be
-fine with this version but I've found there can be some problems in certain
-situations that have been fixed on the master branch.
 
 Then either:
 - Create a `snoop.edn` file with a map in it. Specify the `-Dsnoop.enabled` JVM option
@@ -223,6 +218,21 @@ As with the other methods, this works with multiple arities:
   ([(x int?) (y int?) & (zs [:* int?])]
     ;; with no output schema
     ...))
+```
+
+### Support for Keyword Argument Functions
+
+Treat the keyword arguments as a single map argument (as if it were a fixed-arity function).
+If no keyword arguments are passed, an empty map (instead of nil) will be used for validation
+(so you do not have to wrap `:map` with `:maybe`).
+
+```clojure
+(>defn f [a & {:keys [b c]}]
+  [int? [:map
+         [:b int?]
+         [:c {:optional true} int?]]
+   => int?]
+   ...)
 ```
 
 ## Configuration
