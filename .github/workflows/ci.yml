@@ -3,7 +3,7 @@ name: ci-test
 on: [push, pull_request]
 
 jobs:
-  test:
+  clj-test:
     # ubuntu 18.04 comes with lein + java8 installed
     runs-on: ubuntu-18.04
     steps:
