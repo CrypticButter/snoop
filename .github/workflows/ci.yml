@@ -1,0 +1,58 @@
+name: ci-test
+
+on: [push, pull_request]
+
+jobs:
+  clj-test:
+    # ubuntu 18.04 comes with lein + java8 installed
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Install bb
+        run:
+          ./bin/install-bb.sh
+
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@3.5
+        with:
+          cli: 1.10.3.943
+
+      - name: Run CLJ Tests
+        run: |
+          bb test clj
+
+  cljs-test:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Install bb
+        run:
+          ./bin/install-bb.sh
+
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@3.5
+        with:
+          cli: 1.10.3.943
+
+      - name: Install Chrome
+        run: |
+          whoami
+          sudo apt-get update -qq
+          sudo apt-get install -q -y xvfb libgbm1 libxss1 chromium-browser
+
+      - name: Ensure chrome installed
+        run: chromium-browser --version
+
+      - name: Install cljs deps
+        run: yarn install
+
+      - name: Run CLJS tests
+        run: ./bin/ci-cljs-test.sh
