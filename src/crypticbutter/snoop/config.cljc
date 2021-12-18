@@ -125,11 +125,13 @@
                 (swap! *compiletime-config-cache
                        (fn [m]
                          (let [fresh-config (get-compiletime-config*)
-                               oldest-id    (-> m :register peek)]
+                               oldest-id    (-> m :register peek)
+                               oldest-timestamp (get-in m [:by-id oldest-id :timestamp])]
                            (-> m
                                (cond-> #__
                                 (and id (-> m :register count (> 15))
-                                     (< (* 1000 60 10) (- now (get-in m [:by-id oldest-id :timestamp]))))
+                                     oldest-timestamp
+                                     (< (* 1000 60 10) (- now oldest-timestamp)))
                                  (-> (update :by-id dissoc oldest-id)
                                      (update :register pop)))
                                (cond-> id (update :register conj id))
