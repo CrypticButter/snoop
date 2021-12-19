@@ -1,4 +1,5 @@
-{:tasks {:requires ([babashka.fs :as fs])
+;;
+{:tasks {:requires [[babashka.fs :as fs]]
 
          chui (shell "./node_modules/.bin/shadow-cljs -A:lib/cider-nrepl watch test-runner")
 
@@ -6,16 +7,14 @@
 
          -jar-location "target/build/snoop.jar"
 
-         pom (clojure "-Spom")
+         pom (clojure "-T:build" "pom")
 
-         jar {:depends [-jar-location]
-              :task    (clojure "-M:skinnyjar" -jar-location)}
+         jar (clojure "-T:build" "jar")
 
-         deploy {:depends [-jar-location]
-                 :task    (clojure "-M:project/clojars" -jar-location)}
+         deploy (clojure "-T:build" "deploy")
 
          ;; To deploy with username & password
-         jardeploy {:depends [jar deploy]}
+         jardeploy (clojure "-T:build" "jardeploy")
 
          ;;
          }}

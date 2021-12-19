@@ -1,5 +1,9 @@
 #+TITLE: Changelog
 
+* 21-353-alpha
+** Fixes:
+   - [[https://github.com/CrypticButter/snoop/pull/6][#6]]: Possible Null Pointer Exception
+
 * 21-228-alpha
 ** Features:
    - *[BREAKING CHANGE]* Better support for keyword argument functions (see README). The keyword args are treated as an additional map argument rather than variadic input.

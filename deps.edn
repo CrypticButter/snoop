@@ -1,26 +1,27 @@
 {:paths ["src" "resources"]
 
  :deps {net.cgrand/macrovich {:mvn/version "0.2.1"}
-        com.taoensso/encore  {:mvn/version "3.19.0"}
-        metosin/malli        {:mvn/version "0.6.1"}}
+        com.taoensso/encore  {:mvn/version "3.20.0"}
+        metosin/malli        {:mvn/version "0.7.5"}}
 
- :aliases {:cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "2.15.2"}}}
+ :aliases {:cljs {:extra-deps {thheller/shadow-cljs {:mvn/version "2.16.8"}}}
            :dev {:extra-paths ["src-dev"]
-                 :extra-deps {cider/cider-nrepl {:mvn/version "0.26.0"}
-                              nrepl/nrepl {:mvn/version "0.8.3"}
-                              cider/piggieback     {:mvn/version "0.5.2"}}}
+                 :extra-deps {cider/cider-nrepl {:mvn/version "0.27.4"}
+                              nrepl/nrepl {:mvn/version "0.9.0"}}}
            :test {:extra-paths ["test"]}
            :test-runner {:extra-paths ["test"]
-                         :extra-deps {lambdaisland/kaocha          {:mvn/version "1.0.861"}
+                         :extra-deps {lambdaisland/kaocha          {:mvn/version "1.60.972"}
                                       lambdaisland/kaocha-cljs2 {:mvn/version "0.0.35"
                                                                  :exclusions [lambdaisland/glogi]}
                                       ;; you get errors when using glogi versions earlier than 1.0.100
                                       lambdaisland/glogi {:mvn/version "1.0.106"}
-                                      thheller/shadow-cljs {:mvn/version "2.15.2"}}}
+                                      thheller/shadow-cljs {:mvn/version "2.16.8"}}}
 
            :snoop {:jvm-opts ["-Dsnoop.enabled"]}
 
-           :skinnyjar {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
-                                                     :sha "b093f79420fef019faf62a75b888b5e10f4e8cc9"}}
-                       :main-opts ["-m" "mach.pack.alpha.skinny"
-                                   "--project-path"]}}}
+           :build {:extra-deps {io.github.clojure/tools.build {:git/tag "v0.7.2" :git/sha "0361dde"}
+                                io.github.juxt/pack.alpha {:git/sha "9fd4a63ddeec3bedcbc819422de5a40ccb9eb8c9"}
+                                slipset/deps-deploy {:mvn/version "0.2.0"}}
+                   :ns-default build}
+           ;;
+           }}

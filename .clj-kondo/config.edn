@@ -1,1 +1,2 @@
-{:config-paths ["../resources/clj-kondo.exports/com.crypticbutter/snoop"]}
+{:config-paths ["../resources/clj-kondo.exports/com.crypticbutter/snoop"
+                "rewrite-clj/rewrite-clj"]}

@@ -24,4 +24,5 @@ yarn-error.log
 .projectile
 .#*
 .clj-kondo/.cache/*
-.lsp/sqlite.db
+.clj-kondo/com.crypticbutter/snoop
+.lsp/.cache
