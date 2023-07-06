@@ -5,6 +5,6 @@
      ;; Because the current MetaFn implementation can cause quirky errors in CLJS
   [f m]
   (let [new-f (goog/bind f #js{})]
-    (goog/mixin new-f f)
+    (.assign js/Object new-f f)
     (specify! new-f IMeta #_:clj-kondo/ignore (-meta [_] m))
     new-f))
